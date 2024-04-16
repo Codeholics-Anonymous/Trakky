@@ -1,1 +1,2 @@
 # Trakky
+# Pozdrawiam Jedrzeja
