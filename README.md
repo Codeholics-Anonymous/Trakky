@@ -26,7 +26,7 @@ Kornelia Rozpara
 ### Acknowledgments
 All contributors and testers who have helped shape TRAKKY into a reliable dietary tracking tool.
 Special thanks to our community of users providing continuous feedback.
-For more information on using TRAKKY, please refer to the documentation or contact our support tea
+For more information on using TRAKKY, please refer to the documentation or contact our support team.
 
 ## License
 Copyright 2024 Codeholics-Anonymous
