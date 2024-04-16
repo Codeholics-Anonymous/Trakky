@@ -16,9 +16,6 @@ To use TRAKKY, clone this repository and follow the setup instructions below.
 ### Usage
 After launching the app, register an account to start tracking your dietary intake. The dashboard will guide you through adding meals, calculating your caloric needs, and reviewing your dietary history.
 
-### Contributing
-Contributions are welcome! Please refer to our CONTRIBUTING.md for guidelines on how to make contributions to this project.
-
 ### Team
 TRAKKY is brought to you by Codeholics Anonymous:
 Szymon Gryz
