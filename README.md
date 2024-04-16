@@ -13,6 +13,9 @@ TRAKKY is a comprehensive diet and nutrition tracking application designed to he
 ## Getting Started
 To use TRAKKY, clone this repository and follow the setup instructions below.
 
+### Setup Instructions
+TBD
+
 ### Usage
 After launching the app, register an account to start tracking your dietary intake. The dashboard will guide you through adding meals, calculating your caloric needs, and reviewing your dietary history.
 
