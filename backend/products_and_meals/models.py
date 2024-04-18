@@ -1,5 +1,5 @@
 from django.db import models
-
+"""
 class Macros(models.Model):
     protein = models.IntegerField()
     carbohydrates = models.IntegerField()
@@ -49,3 +49,4 @@ class Product(models.Model):
         except cls.DoesNotExist:
             # Obsłużenie przypadku, gdy produkt o podanym ID nie istnieje
             return None
+"""
