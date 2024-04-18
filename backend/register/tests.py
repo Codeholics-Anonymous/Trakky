@@ -1,31 +1,67 @@
 from django.test import TestCase
+from django.contrib.auth.models import User
+from rest_framework.test import APITestCase
+from rest_framework import status
+from django.urls import reverse
 
 # Create your tests here.
 
-"""
-class UserTestCase(TestCase):
+class AuthenticationTests(APITestCase):
+
+    def setUp(self):
+        self.user_data = {
+            'username': 'test_user',
+            'password': 'test_password'
+        }
+        self.user = User.objects.create_user(**self.user_data)
+
     def test_login(self):
-        user = User(username='testuser', password='password123')
-        self.assertTrue(user.login())  # Zakładamy, że metoda login zwraca True przy poprawnym logowaniu
+        url = reverse('login')  # 'login' is our endpoint
+        response = self.client.post(url, self.user_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('token', response.data)
+
+    def test_registration(self):
+        url = reverse('register')  # 'register' is our endpoint
+        new_user_data = {
+            'username': 'new_user',
+            'password': 'new_password'
+        }
+        response = self.client.post(url, new_user_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(User.objects.filter(username=new_user_data['username']).exists())  # Check if user was correctly registered
 
     def test_logout(self):
-        user = User(username='testuser', password='password123')
-        user.login()
-        self.assertTrue(user.logout())  # Zakładamy, że metoda logout zwraca True przy poprawnym wylogowaniu
-
-    def test_register(self):
-        user = User(username='newuser', password='newpassword123')
-        self.assertTrue(user.register())  # Zakładamy, że metoda register zwraca True przy poprawnej rejestracji
+        url = reverse('logout')  # 'logout' endpoint
+        self.client.force_authenticate(user=self.user) # force user authenticate
+        response = self.client.post(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 class UserProfileTestCase(TestCase):
-    def test_updateProfile(self):
-        # Testowanie metody updateProfile
-        user_profile = UserProfile(userID=1, weight=70, dailyCaloricDemand=2500)
-        user_profile.weight = 75  # Aktualizacja wagi
-        self.assertTrue(user_profile.updateProfile())  # Zakładamy, że metoda updateProfile zwraca True przy poprawnej aktualizacji
+    def setUp(self):
+        # Create temporary user and profile for tests
+        self.userM = User.objects.create_user(username='testuserM', email='test@example.com', password='testpasswordM')
+        self.userF = User.objects.create_user(username='testuserF', email='test@example.com', password='testpasswordF')
+        self.profileM = UserProfile.objects.create(user=self.user, weight=70, activityLevel=1.1, sex='M')
+        self.profileF = UserProfile.objects.create(user=self.user, weight=55, activityLevel=1.5, sex='F')
 
-    def test_calculateDemand(self):
-        # Testowanie metody calculateDemand
-        user_profile = UserProfile(userID=1, weight=70, dailyCaloricDemand=2500)
-        self.assertEqual(user_profile.calculateDemand(), 2600)  # Zakładamy, że metoda calculateDemand zwraca nowe zapotrzebowanie kaloryczne
-"""
+    def test_update_profile(self):
+        # Check update_profile method of user
+        self.profileM.update_profile(75)
+        self.assertEqual(self.profileM.weight, 75)
+        self.assertEqual(self.profileM.daily_calory_demand, 75 * 24 * profileM.activityLevel)
+
+        self.profileF.update_profile(60)
+        self.assertEqual(self.profileF.weight, 60)
+        self.assertEqual(self.profileF.daily_calory_demand, 60 * 22 * profileF.activityLevel)
+
+    def test_calculate_demand(self):
+        # Check if calculate_demand adds demand to Demand database
+        self.profileM.calculate_demand() # it has to add demand to database
+        saved_demand = Demand.objects.filter(user_id=profileM.user_id, daily_calory_demand=profileM.daily_calory_demand)
+        self.assertTrue(saved_demand.exists()) # we found at least one element
+
+    def tearDown(self):
+        # Clear database
+        self.userM.delete()
+        self.userF.delete()
