@@ -1,6 +1,10 @@
 from django.test import TestCase
 from .models import *
 from datetime import date
+from django.contrib.auth.models import User
+from rest_framework.test import APITestCase
+from rest_framework import status
+from django.urls import reverse
 
 # Create your tests here.
 
@@ -27,61 +31,90 @@ class MacrosTestCase(TestCase):
 # unit test for Demand class
 
 class DemandTestCase(TestCase):
-    def test_create_demand_object(self):
-        demand = Demand(user_id = 1, daily_calory_demand = 2000, date = date.today())
 
-        self.assertEqual(demand.user_id, 1)
+    def setUp(self):
+        # Create demands for tests
+        self.demand1 = Demand.objects.create(user_id=1, daily_calory_demand=2000, date=date.today(), protein=120, fat=60, carbohydrates=200)
+        self.demand2 = Demand.objects.create(user_id=2, daily_calory_demand=2000, date=date.today(), protein=120, fat=60, carbohydrates=200)
+
+    def test_create_demand_object(self):
+        demand = Demand.objects.create(user_id=3, daily_calory_demand=2000, date=date.today(), protein=120, fat=60, carbohydrates=200)
+
+        self.assertEqual(demand.user_id, 3)
         self.assertEqual(demand.daily_calory_demand, 2000)
         self.assertEqual(demand.date, date.today())
 
+        # check existence in database
+
+        saved_demand = Demand.objects.get(demand_id=demand.demand_id)
+        self.assertEqual(saved_demand.daily_calory_demand, 2000)
+        self.assertEqual(saved_demand.date, date.today())
+
     def test_demand_update_calories(self):
-        demand = Demand(user_id = 1, daily_calory_demand = 0, date = date.today(), protein=120, fat=60, carbohydrates=200)
+        updated_demand = Demand.update_calories(demand_id=self.demand1.demand_id, new_date=date.today(), new_protein=130, new_fat=70, new_carbohydrates=190)
 
-        demand.update_calories(1, 0, 0, 0)
+        # Check if first demand was updated correctly
+        self.assertIsNotNone(updated_demand)
+        self.assertEqual(updated_demand.daily_calory_demand, 4*130 + 4*70 + 9*190)
+        self.assertEqual(updated_demand.date, date.today())
+        self.assertEqual(updated_demand.protein, 130)
+        self.assertEqual(updated_demand.fat, 70)
+        self.assertEqual(updated_demand.carbohydrates, 190)
 
-        self.assertEqual(demand.protein, 120)
-        self.assertEqual(demand.fat, 60)
-        self.assertEqual(demand.carbohydrates, 200)
-        self.assertTrue(demand.daily_calory_demand, 4*120 + 4*60 + 9*200)
+        # Check if other records are same as before update
+        unchanged_demand = Demand.objects.get(demand_id=self.demand2.demand_id)
+        self.assertEqual(unchanged_demand.daily_calory_demand, 2000)
+        self.assertEqual(unchanged_demand.protein, 120)
+        self.assertEqual(unchanged_demand.fat, 60)
+        self.assertEqual(unchanged_demand.carbohydrates, 200)
 
-        demand.update_calories(1, 30, 20, 10)
-
-        self.assertEqual(demand.protein, 150)
-        self.assertEqual(demand.fat, 80)
-        self.assertEqual(demand.carbohydrates, 210)
-        self.assertEqual(demand.daily_calory_demand, 4*150 + 4*80 + 9*210)
-
-        demand.update_calories(0, 10, 20, 30)
-
-        self.assertEqual(demand.protein, 140)
-        self.assertEqual(demand.fat, 60)
-        self.assertEqual(demand.carbohydrates, 180)
-        self.assertEqual(demand.daily_calory_demand, 4*140 + 4*60 + 9*180)
-
+    def tearDown():
+        self.demand1.delete()
+        self.demand2.delete()
 
 # unit tests for Summary class
 
 class SummaryTestCase(TestCase):
+
+    def setUp(self):
+        # Create demands for tests
+        self.summary1 = Summary.objects.create(user_id=1, daily_calory_intake=0, date=date.today())
+        self.summary2 = Summary.objects.create(user_id=2, daily_calory_intake=0, date=date.today())
+
     def test_create_summary_object(self):
-        summary = Summary(user_id = 1, daily_calory_intake = 2000, date = date.today(), protein = 125, fat = 125, carbohydrates = 111)
+        summary = Summary.objects.create(user_id=3, daily_calory_intake=0, date=date.today())
 
-        self.assertIsNotNone(summary)
-        self.assertEqual(summary.user_id, 1)
-        self.assertEqual(summary.daily_calory_intake, 2000)
+        self.assertEqual(summary.user_id, 3)
+        self.assertEqual(summary.daily_calory_intake, 0)
         self.assertEqual(summary.date, date.today())
-        self.assertEqual(summary.protein, 125)
-        self.assertEqual(summary.date, 125)
-        self.assertEqual(summary.date, 111)
-    
+
+        # check existence in database
+
+        saved_summary = Summary.objects.get(summary_id=summary.summary_id)
+        self.assertEqual(saved_demand.daily_calory_intake, 0)
+        self.assertEqual(saved_demand.date, date.today())
+
     def test_summary_update_calories(self):
-        summary = Summary(user_id = 1, date = date.today(), protein = 0, carbohydrates = 0, fat = 0)
+        updated_summary = Summary.update_calories(summary_id=self.summary1.summary_id, new_date=date.today(), increase=True, protein=30, fat=10, carbohydrates=20)
 
-        summary.update_calories(protein = 20, fat = 0, carbohydrates = 30) # we have to add input values to current macro
+        # Check if first summary was updated correctly
+        self.assertIsNotNone(updated_summary)
+        self.assertEqual(updated_summary.daily_calory_intake, 4*30 + 4*10 + 9*20)
+        self.assertEqual(updated_summary.date, date.today())
+        self.assertEqual(updated_summary.protein, 30)
+        self.assertEqual(updated_summary.fat, 10)
+        self.assertEqual(updated_summary.carbohydrates, 20)
 
-        self.assertEqual(summary.protein, 100)
-        self.assertEqual(summary.carbohydrates, 150)
-        self.assertEqual(summary.fat, 60)
-        self.assertEqual(summary.daily_calory_intake, summary.protein * 4 + summary.carbohydrates * 4 + summary.fat * 9)
+        # Check if other records are same as before update
+        unchanged_summary = Summary.objects.get(summary_id=self.summary2.summary_id)
+        self.assertEqual(unchanged_summary.daily_calory_intake, 0)
+        self.assertEqual(unchanged_summary.protein, 0)
+        self.assertEqual(unchanged_summary.fat, 0)
+        self.assertEqual(unchanged_summary.carbohydrates, 0)
+
+    def tearDown():
+        self.summary1.delete()
+        self.summary2.delete()
 
 class ProductTestCase(TestCase):
     def setUp(self):
@@ -136,8 +169,37 @@ class MealTestCase(TestCase):
         self.assertEqual(saved_meal.type, "dinner")
         self.assertEqual(saved_meal.date, date.today())
 
-class MealItem():
-    ...
+class MealItemTestCase(TestCase):
+    def setUp(self):
+        # Create MealItem for tests
+        self.meal_item1 = MealItem.objects.create( meal_id=1, product_id=1, gram_amount=200)
+
+    def test_add_product(self):
+        meal_item = MealItem.add_product(meal_id=1, product_id=1, gram_amount=200)
+
+        # Check if mealItem was added correctly
+        self.assertIsNotNone(meal_item)
+        self.assertEqual(meal_item.gram_amount, 200)
+        self.assertEqual(meal_item.meal_id, 1)
+        self.assertEqual(meal_item.product_id, 1)
+
+        # Check if mealItem exists in our database
+        saved_product = MealItem.objects.get(meal_item_id=meal_item.meal_item_id)
+        self.assertIsNotNone(saved_product)
+        self.assertEqual(saved_product.meal_id, 1)
+        self.assertEqual(saved_product.product_id, 1)
+        self.assertEqual(saved_product.gram_amount, 200)
+
+    def test_remove_product(self):
+        # Get the product to remove
+        product_to_remove = self.meal_item1
+        product_to_remove_id = product_to_remove.meal_item_id
+
+        # Remove the product from the meal
+        MealItem.objects.filter(meal_item_id=product_to_remove_id).delete()
+
+        # Check if the removed product no longer exists in the database
+        self.assertFalse(MealItem.objects.filter(meal_item_id=product_to_remove_id).exists())
 
 class AuthenticationTests(APITestCase):
 
