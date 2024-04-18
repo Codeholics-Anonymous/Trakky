@@ -139,6 +139,37 @@ class MealTestCase(TestCase):
 class MealItem():
     ...
 
+class AuthenticationTests(APITestCase):
+
+    def setUp(self):
+        self.user_data = {
+            'username': 'test_user',
+            'password': 'test_password'
+        }
+        self.user = User.objects.create_user(**self.user_data)
+
+    def test_login(self):
+        url = reverse('login')  # 'login' is our endpoint
+        response = self.client.post(url, self.user_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('token', response.data)
+
+    def test_registration(self):
+        url = reverse('register')  # 'register' is our endpoint
+        new_user_data = {
+            'username': 'new_user',
+            'password': 'new_password'
+        }
+        response = self.client.post(url, new_user_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(User.objects.filter(username=new_user_data['username']).exists())  # Check if user was correctly registered
+
+    def test_logout(self):
+        url = reverse('logout')  # 'logout' endpoint
+        self.client.force_authenticate(user=self.user) # force user authenticate
+        response = self.client.post(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 class UserProfileTestCase(TestCase):
     def setUp(self):
         # Create temporary user and profile for tests
