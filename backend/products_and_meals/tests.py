@@ -3,7 +3,7 @@ from .models import *
 from datetime import date
 
 # Create your tests here.
-"""
+
 class MacrosTestCase(TestCase):
     def test_correct_update_macros(self): # input is correct
         class ConcreteMacros(Macros): # create subclass to test abstract class Macros methods
@@ -23,10 +23,9 @@ class MacrosTestCase(TestCase):
         self.assertFalse(macros.update_macros(-50, 3, 120))
         self.assertFalse(macros.update_macros(0, 5, 111))
         self.assertFalse(macros.update_macros(-50, -50, -100))
-"""
 
 # unit test for Demand class
-"""
+
 class DemandTestCase(TestCase):
     def test_create_demand_object(self):
         demand = Demand(user_id = 1, daily_calory_demand = 2000, date = date.today())
@@ -58,11 +57,11 @@ class DemandTestCase(TestCase):
         self.assertEqual(demand.fat, 60)
         self.assertEqual(demand.carbohydrates, 180)
         self.assertEqual(demand.daily_calory_demand, 4*140 + 4*60 + 9*180)
-"""
+
 
 # unit tests for Summary class
 
-"""class SummaryTestCase(TestCase):
+class SummaryTestCase(TestCase):
     def test_create_summary_object(self):
         summary = Summary(user_id = 1, daily_calory_intake = 2000, date = date.today(), protein = 125, fat = 125, carbohydrates = 111)
 
@@ -83,7 +82,6 @@ class DemandTestCase(TestCase):
         self.assertEqual(summary.carbohydrates, 150)
         self.assertEqual(summary.fat, 60)
         self.assertEqual(summary.daily_calory_intake, summary.protein * 4 + summary.carbohydrates * 4 + summary.fat * 9)
-    """
 
 class ProductTestCase(TestCase):
     def setUp(self):
@@ -107,8 +105,6 @@ class ProductTestCase(TestCase):
     def test_update_product(self):
         updated_product = Product.update_product(product_id=self.product1.product_id, new_name="cake", new_calories=200)
 
-        print(Product.objects.all().values())
-
         # Check if first product was updated correctly
         self.assertIsNotNone(updated_product)
         self.assertEqual(updated_product.name, "cake")
@@ -118,6 +114,11 @@ class ProductTestCase(TestCase):
         unchanged_product = Product.objects.get(product_id=self.product2.product_id)
         self.assertEqual(unchanged_product.name, "orange")
         self.assertEqual(unchanged_product.calories_per_hundred_grams, 60)
+
+    def tearDown(self):
+        # Clear database
+        self.product1.delete()
+        self.product2.delete()
 
 class MealTestCase(TestCase):
     def test_add_meal(self):
@@ -137,3 +138,32 @@ class MealTestCase(TestCase):
 
 class MealItem():
     ...
+
+class UserProfileTestCase(TestCase):
+    def setUp(self):
+        # Create temporary user and profile for tests
+        self.userM = User.objects.create_user(username='testuserM', email='test@example.com', password='testpasswordM')
+        self.userF = User.objects.create_user(username='testuserF', email='test@example.com', password='testpasswordF')
+        self.profileM = UserProfile.objects.create(user=self.user, weight=70, activityLevel=1.1, sex='M')
+        self.profileF = UserProfile.objects.create(user=self.user, weight=55, activityLevel=1.5, sex='F')
+
+    def test_update_profile(self):
+        # Check update_profile method of user
+        self.profileM.update_profile(75)
+        self.assertEqual(self.profileM.weight, 75)
+        self.assertEqual(self.profileM.daily_calory_demand, 75 * 24 * profileM.activityLevel)
+
+        self.profileF.update_profile(60)
+        self.assertEqual(self.profileF.weight, 60)
+        self.assertEqual(self.profileF.daily_calory_demand, 60 * 22 * profileF.activityLevel)
+
+    def test_calculate_demand(self):
+        # Check if calculate_demand adds demand to Demand database
+        self.profileM.calculate_demand() # it has to add demand to database
+        saved_demand = Demand.objects.filter(user_id=profileM.user_id, daily_calory_demand=profileM.daily_calory_demand)
+        self.assertTrue(saved_demand.exists()) # we found at least one element
+
+    def tearDown(self):
+        # Clear database
+        self.userM.delete()
+        self.userF.delete()
