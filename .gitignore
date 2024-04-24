@@ -3,10 +3,11 @@
 Thumbs.db
 
 # Ignoruj pliki utworzone przez środowisko Pythona
-__pycache__/
+*.__pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.cpy
 
 # Ignoruj pliki konfiguracyjne środowiska
 .env
