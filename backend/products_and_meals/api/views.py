@@ -6,9 +6,9 @@ from products_and_meals.models import Product
 from products_and_meals.api.serializers import ProductSerializer
 
 @api_view(['GET', ])
-def api_detail_product_view(request, slug):
+def api_detail_product_view(request, product_id):
     try:
-        product = Product.objects.get(product_id=slug)
+        product = Product.objects.get(product_id=product_id)
     except Product.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
