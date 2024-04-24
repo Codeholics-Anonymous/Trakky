@@ -29,13 +29,13 @@ class Product(Macros):
     calories_per_hundred_grams = models.IntegerField()
     
     @classmethod
-    def add_product(cls, name, calories_per_hundred_grams, protein=0, carbohydrates=0, fat=0):
+    def add_product(cls, name, protein=0, carbohydrates=0, fat=0):
         new_product = cls(name=name, calories_per_hundred_grams=calories_per_hundred_grams, protein=protein, carbohydrates=carbohydrates, fat=fat)
         new_product.save()
         return new_product
     
     @classmethod
-    def update_product(cls, product_id, new_name, new_calories):
+    def update_product(cls, product_id, new_name, new_protein, new_fat, new_carbohydrates, new_calories=0):
         try:
             product = cls.objects.get(product_id=product_id)
             product.name = new_name
