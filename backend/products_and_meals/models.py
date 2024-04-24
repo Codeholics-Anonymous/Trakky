@@ -1,30 +1,26 @@
 from django.db import models
 
 class Macros(models.Model):
+
     protein = models.IntegerField()
     carbohydrates = models.IntegerField()
     fat = models.IntegerField()
     
     def update_macros(self, protein, carbohydrates, fat):
-        if (protein <= 0 or carbohydrates <= 0 or fat <= 0):
+        ...
+        """
+        if (protein < 0 or carbohydrates < 0 or fat < 0):
             return False
         
         self.protein = protein
         self.carbohydrates = carbohydrates
         self.fat = fat
+
         return True
+        """
     
     class Meta:
         abstract = True
-
-class Demand(Macros):
-    
-    user_id = models.IntegerField()
-    daily_calory_demand = models.IntegerField()
-    date = models.DateField()
-    
-    def update_calories(self, increase, protein, fat, carbohydrates):
-        ...
     
 class Product(Macros):
     
@@ -33,8 +29,8 @@ class Product(Macros):
     calories_per_hundred_grams = models.IntegerField()
     
     @classmethod
-    def add_product(cls, name, calories_per_hundred_grams):
-        new_product = cls(name=name, calories_per_hundred_grams=calories_per_hundred_grams)
+    def add_product(cls, name, calories_per_hundred_grams, protein=0, carbohydrates=0, fat=0):
+        new_product = cls(name=name, calories_per_hundred_grams=calories_per_hundred_grams, protein=protein, carbohydrates=carbohydrates, fat=fat)
         new_product.save()
         return new_product
     
@@ -49,3 +45,12 @@ class Product(Macros):
         except cls.DoesNotExist:
             # When product of this ID doesn't exists
             return None
+
+class Demand(Macros):
+    
+    user_id = models.IntegerField()
+    daily_calory_demand = models.IntegerField()
+    date = models.DateField()
+    
+    def update_calories(self, increase, protein, fat, carbohydrates):
+        ...

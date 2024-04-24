@@ -16,7 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.urls import include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    #REST FRAMEWORK URLS
+    path('api/product/', include('products_and_meals.api.urls', 'products_and_meals_api'))
+
 ]
