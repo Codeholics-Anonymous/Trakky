@@ -33,7 +33,8 @@ class Product(Macros):
     def add_product(cls, name, calories_per_hundred_grams=None, protein=0, carbohydrates=0, fat=0):
         new_product = cls(name=name, calories_per_hundred_grams=calories_per_hundred_grams,
                           protein=protein, carbohydrates=carbohydrates, fat=fat)
-        new_product.full_clean()  # Wywołujemy clean() przed zapisaniem
+        if calories_per_hundred_grams is None:
+            new_product.full_clean()  # Wywołujemy clean() przed zapisaniem
         new_product.save()
         return new_product
 
