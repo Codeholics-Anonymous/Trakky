@@ -62,13 +62,19 @@ def api_delete_product_view(request, product_id):
 def api_create_product_view(request):
     #account = request.user #when we will have users authentication it will work
 
-    account = User.objects.get(pk=1)
-
     product = Product()
 
     if request.method == 'POST':
         serializer = ProductSerializer(product, data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            if ('calories_per_hundred_grams' not in serializer.validated_data):
+                serializer.validated_data['calories_per_hundred_grams'] = None
+            Product.add_product(
+                serializer.validated_data['name'],
+                serializer.validated_data['calories_per_hundred_grams'],
+                serializer.validated_data['protein'],
+                serializer.validated_data['carbohydrates'],
+                serializer.validated_data['fat'],
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
