@@ -1,0 +1,38 @@
+# Ignoruj pliki i katalogi utworzone przez systemy operacyjne
+.DS_Store
+Thumbs.db
+
+# Ignoruj pliki utworzone przez środowisko Pythona
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignoruj pliki konfiguracyjne środowiska
+.env
+
+# Ignoruj pliki migracji Django
+/migrations/
+
+# Ignoruj pliki bazy danych SQLite (jeśli używasz SQLite)
+*.sqlite3
+*.db
+
+# Ignoruj pliki pliki z logami
+*/logs/
+
+# Ignoruj pliki z mediami (np. obrazy, pliki wideo)
+/media/
+
+# Ignoruj pliki z statycznymi zasobami
+/static/
+
+# Ignoruj pliki z zależnościami (np. katalogi venv lub virtualenv)
+./trakky_venv/
+venv/
+env/
+env/
+
+# Ignoruj pliki z cache'em
+__pycache__/
+.cache/
