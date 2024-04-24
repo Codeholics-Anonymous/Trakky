@@ -57,11 +57,78 @@ class Product(Macros):
             return None
 
 
+
 class Demand(Macros):
-    
     user_id = models.IntegerField()
-    daily_calory_demand = models.IntegerField()
+    daily_calory_demand = models.IntegerField()  # To pole będzie obliczane automatycznie
     date = models.DateField()
-    
-    def update_calories(self, increase, protein, fat, carbohydrates):
-        ...
+
+    def calculate_daily_calory_demand(self):
+        # Obliczanie dziennej potrzeby kalorycznej na podstawie protein, carbohydrates i fat
+        return (self.protein * 4) + (self.carbohydrates * 4) + (self.fat * 9)
+
+    @classmethod
+    def update_calories(cls, user_id, increase, protein, fat, carbohydrates):
+        try:
+            demand = cls.objects.get(user_id=user_id)
+            change = (protein * 4) + (carbohydrates * 4) + (fat * 9)
+            if increase:
+                demand.daily_calory_demand += change
+            else:
+                demand.daily_calory_demand -= change
+            demand.save()
+            return demand
+        except cls.DoesNotExist:
+            return None
+
+    @classmethod
+    def create_demand(cls, user_id, date, protein=0, carbohydrates=0, fat=0):
+        # Tworzenie nowego obiektu Demand
+        new_demand = cls(
+            user_id=user_id,
+            date=date,
+            protein=protein,
+            carbohydrates=carbohydrates,
+            fat=fat
+        )
+        # Obliczanie i ustawienie daily_calory_demand na podstawie wartości makroskładników
+        new_demand.daily_calory_demand = new_demand.calculate_daily_calory_demand()
+        new_demand.save()
+        return new_demand
+
+
+
+
+class Summary(Macros):
+    user_id = models.IntegerField()
+    daily_calory_intake = models.IntegerField()
+    date = models.DateField()
+
+    @classmethod
+    def update_calories(cls, user_id, increase, fat, protein, carbohydrates):
+        try:
+            summary = cls.objects.get(user_id=user_id)
+            change = (protein * 4) + (carbohydrates * 4) + (
+                        fat * 9)
+            if increase:
+                summary.daily_calory_intake += change
+            else:
+                summary.daily_calory_intake -= change
+            summary.save()
+            return summary
+        except cls.DoesNotExist:
+            return None
+
+    @classmethod
+    def create_summary(cls, user_id, date, fat=0, protein=0, carbohydrates=0):
+        calories = (protein * 4) + (carbohydrates * 4) + (fat * 9)
+
+        new_summary = cls(
+            user_id=user_id,
+            date=date,
+            daily_calory_intake=calories
+        )
+        new_summary.save()
+        return new_summary
+
+
