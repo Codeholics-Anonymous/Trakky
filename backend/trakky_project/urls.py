@@ -22,6 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     #REST FRAMEWORK URLS
-    path('api/product/', include('products_and_meals.api.urls', 'products_and_meals_api'))
+    path('api/', include('products_and_meals.api.urls', 'products_and_meals_api')),
 
 ]

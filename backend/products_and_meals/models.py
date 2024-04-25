@@ -1,8 +1,5 @@
 from django.db import models
 
-
-from django.db import models
-
 class Macros(models.Model):
     protein = models.IntegerField()
     carbohydrates = models.IntegerField()
@@ -57,8 +54,6 @@ class Product(Macros):
         except cls.DoesNotExist:
             return None
 
-
-
 class Demand(Macros):
     user_id = models.IntegerField()
     daily_calory_demand = models.IntegerField()  # To pole będzie obliczane automatycznie
@@ -71,7 +66,7 @@ class Demand(Macros):
     @classmethod
     def update_calories(cls, user_id, increase, protein, fat, carbohydrates):
         try:
-            demand = cls.objects.get(user_id=user_id)
+            demand = cls.objects.filter(user_id=user_id).order_by('date').first()
             change = (protein * 4) + (carbohydrates * 4) + (fat * 9)
             if increase:
                 demand.daily_calory_demand += change
@@ -97,20 +92,16 @@ class Demand(Macros):
         new_demand.save()
         return new_demand
 
-
-
-
 class Summary(Macros):
     user_id = models.IntegerField()
     daily_calory_intake = models.IntegerField()
     date = models.DateField()
 
     @classmethod
-    def update_calories(cls, user_id, increase, fat, protein, carbohydrates):
+    def update_calories(cls, user_id, increase, fat, protein, carbohydrates, date):
         try:
-            summary = cls.objects.get(user_id=user_id)
-            change = (protein * 4) + (carbohydrates * 4) + (
-                        fat * 9)
+            summary = cls.objects.get(user_id=user_id, date=date)
+            change = (protein * 4) + (carbohydrates * 4) + (fat * 9)
             if increase:
                 summary.daily_calory_intake += change
             else:
