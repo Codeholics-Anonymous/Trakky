@@ -8,6 +8,14 @@ class Macros(models.Model):
     class Meta:
         abstract = True
 
+    def update_macros(self, protein, carbohydrates, fat):
+        if (protein < 0 or carbohydrates < 0 or fat < 0):
+            return False
+        self.protein = protein
+        self.carbohydrates = carbohydrates
+        self.fat = fat
+        return True
+
 class Product(Macros):
     product_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=250)
@@ -64,14 +72,13 @@ class Demand(Macros):
         return (self.protein * 4) + (self.carbohydrates * 4) + (self.fat * 9)
 
     @classmethod
-    def update_calories(cls, user_id, increase, protein, fat, carbohydrates):
+    def update_calories(cls, user_id, protein, fat, carbohydrates):
         try:
             demand = cls.objects.filter(user_id=user_id).order_by('date').first()
-            change = (protein * 4) + (carbohydrates * 4) + (fat * 9)
-            if increase:
-                demand.daily_calory_demand += change
-            else:
-                demand.daily_calory_demand -= change
+            demand.protein = protein
+            demand.fat = fat
+            demand.carbohydrates = carbohydrates
+            demand.daily_calory_demand = demand.calculate_daily_calory_demand()
             demand.save()
             return demand
         except cls.DoesNotExist:
@@ -101,6 +108,9 @@ class Summary(Macros):
     def update_calories(cls, user_id, increase, fat, protein, carbohydrates, date):
         try:
             summary = cls.objects.get(user_id=user_id, date=date)
+            summary.protein = protein
+            summary.carbohydrates = carbohydrates
+            summary.fat = fat
             change = (protein * 4) + (carbohydrates * 4) + (fat * 9)
             if increase:
                 summary.daily_calory_intake += change
