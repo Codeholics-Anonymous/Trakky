@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Macros, Product,Demand,Summary
+from .models import Macros, Product, Demand, Summary, Meal
 
 # Register your models here.
 
