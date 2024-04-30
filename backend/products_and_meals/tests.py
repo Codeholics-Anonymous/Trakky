@@ -168,21 +168,21 @@ class MealTestCase(TestCase):
 class MealItemTestCase(TestCase):
     def setUp(self):
         # Create MealItem for tests
-        self.meal_item1 = MealItem.objects.create( meal_id=1, product_id=1, gram_amount=200)
+        self.meal_item1 = MealItem.objects.create(meal_id=1, product_id=1, gram_amount=200)
 
     def test_add_product(self):
-        meal_item = MealItem.add_product(meal_id=1, product_id=1, gram_amount=200)
+        meal_item = MealItem.add_product(meal_id=2, product_id=1, gram_amount=200)
 
         # Check if mealItem was added correctly
         self.assertIsNotNone(meal_item)
         self.assertEqual(meal_item.gram_amount, 200)
-        self.assertEqual(meal_item.meal_id, 1)
+        self.assertEqual(meal_item.meal_id, 2)
         self.assertEqual(meal_item.product_id, 1)
 
         # Check if mealItem exists in our database
         saved_product = MealItem.objects.get(id=meal_item.id)
         self.assertIsNotNone(saved_product)
-        self.assertEqual(saved_product.meal_id, 1)
+        self.assertEqual(saved_product.meal_id, 2)
         self.assertEqual(saved_product.product_id, 1)
         self.assertEqual(saved_product.gram_amount, 200)
 
