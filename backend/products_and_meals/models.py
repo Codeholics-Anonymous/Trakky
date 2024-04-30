@@ -157,4 +157,4 @@ class MealItem(models.Model):
         return meal_item
 
     def remove_product(id):
-        MealItem.objects.get(id=id).delete()
+        return MealItem.objects.get(id=id).delete()
