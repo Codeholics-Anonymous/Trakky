@@ -16,9 +16,9 @@ class MacrosTestCase(TestCase):
         self.assertEqual(macros.fat, 50)
 
     def test_wrong_update_macros(self): # input is incorrect
-        class ConcreteMacros(Macros): # create subclass to test abstract class Macros methods
+        class ConcreteMacrosSecond(Macros): # create subclass to test abstract class Macros methods
             ...
-        macros = ConcreteMacros()
+        macros = ConcreteMacrosSecond()
 
         self.assertFalse(macros.update_macros(-50, 3, 120))
         self.assertFalse(macros.update_macros(0, -5, 111))
@@ -196,5 +196,3 @@ class MealItemTestCase(TestCase):
 
         # Check if the removed product no longer exists in the database
         self.assertFalse(MealItem.objects.filter(meal_item_id=product_to_remove_id).exists())
-
-        '''test..'''
