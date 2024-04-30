@@ -180,7 +180,7 @@ class MealItemTestCase(TestCase):
         self.assertEqual(meal_item.product_id, 1)
 
         # Check if mealItem exists in our database
-        saved_product = MealItem.objects.get(meal_item_id=meal_item.meal_item_id)
+        saved_product = MealItem.objects.get(id=meal_item.id)
         self.assertIsNotNone(saved_product)
         self.assertEqual(saved_product.meal_id, 1)
         self.assertEqual(saved_product.product_id, 1)
@@ -189,10 +189,10 @@ class MealItemTestCase(TestCase):
     def test_remove_product(self):
         # Get the product to remove
         product_to_remove = self.meal_item1
-        product_to_remove_id = product_to_remove.meal_item_id
+        product_to_remove_id = product_to_remove.id
 
         # Remove the product from the meal
-        MealItem.objects.filter(meal_item_id=product_to_remove_id).delete()
+        MealItem.remove_product(id=product_to_remove_id)
 
         # Check if the removed product no longer exists in the database
-        self.assertFalse(MealItem.objects.filter(meal_item_id=product_to_remove_id).exists())
+        self.assertFalse(MealItem.objects.filter(id=product_to_remove_id).exists())
