@@ -20,7 +20,7 @@ class DemandSerializer(serializers.ModelSerializer):
 class MealSerializer(serializers.ModelSerializer):
     class Meta:
         model = Meal
-        fields = ['meal_id', 'user_id', 'type', 'date']
+        fields = ['user_id', 'type', 'date']
 
 class MealItemSerializer(serializers.ModelSerializer):
     class Meta:
