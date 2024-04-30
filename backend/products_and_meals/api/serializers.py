@@ -16,3 +16,13 @@ class DemandSerializer(serializers.ModelSerializer):
     class Meta:
         model = Demand
         fields = ['user_id', 'daily_calory_demand', 'date', 'protein', 'fat', 'carbohydrates']
+
+class MealSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Meal
+        fields = ['meal_id', 'user_id', 'type', 'date']
+
+class MealItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MealItem
+        fields = ['meal_id', 'product_id', 'gram_amount']
