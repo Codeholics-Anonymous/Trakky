@@ -4,8 +4,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
-from products_and_meals.models import (Product, Summary, Demand)
-from products_and_meals.api.serializers import (ProductSerializer, SummarySerializer, DemandSerializer)
+from products_and_meals.models import (Product, Summary, Demand, Meal, MealItem)
+from products_and_meals.api.serializers import (ProductSerializer, SummarySerializer, DemandSerializer, MealSerializer, MealItemSerializer)
 
 # PRODUCT VIEWS
 
@@ -130,3 +130,52 @@ def api_create_demand_view(request):
         )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# MEAL VIEWS
+
+@api_view(['GET'])
+def api_detail_meal_view(request, meal_id):
+    try:
+        meal = Meal.objects.get(meal_id=meal_id)
+    except Meal.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+       serializer = MealSerializer(meal)
+       return Response(serializer.data) 
+
+@api_view(['PUT'])
+def api_create_meal_view(request):
+    ...
+
+@api_view(['DELETE'])
+def api_create_meal_view(request):
+    ...
+
+@api_view(['POST'])
+def api_create_meal_view(request):
+
+    meal = Meal()
+
+    serializer = MealSerializer(meal, request.data)
+    if serializer.is_valid():
+        Meal.add_meal()
+
+    
+# MEAL_ITEM VIEWS
+
+@api_view(['GET'])
+def api_detail_meal_item_view(request, meal_id):
+    ...
+
+@api_view(['PUT'])
+def api_create_meal_item_view(request):
+    ...
+
+@api_view(['DELETE'])
+def api_create_meal_item_view(request):
+    ...
+
+@api_view(['POST'])
+def api_create_meal_item_view(request):
+    ...
