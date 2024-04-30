@@ -140,26 +140,50 @@ def api_detail_meal_view(request, meal_id):
     except Meal.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
     
-    if request.method == 'GET':
-       serializer = MealSerializer(meal)
-       return Response(serializer.data) 
+    serializer = MealSerializer(meal)
+    return Response(serializer.data) 
 
 @api_view(['PUT'])
-def api_create_meal_view(request):
-    ...
+def api_update_meal_view(request, meal_id):
+    try:
+        meal = Meal.objects.get(meal_id=meal_id)
+    except Meal.DoesNotExist:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    serializer = MealSerializer(meal, request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({'success' : 'update successful'})
+    return Response(serializer.errors, status=status.HTTP_404_BAD_REQUEST)
 
 @api_view(['DELETE'])
-def api_create_meal_view(request):
-    ...
+def api_delete_meal_view(request, meal_id):
+    try:
+        meal = Meal.objects.get(meal_id=meal_id)
+    except Meal.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    operation = Meal.objects.get(meal_id=meal_id).delete()
+    data = {}
+    if operation:
+        data['success'] = 'delete successful'
+    else:
+        data['failure'] = 'delete failed'
+    return Response(data)
 
 @api_view(['POST'])
 def api_create_meal_view(request):
+
+    #user_id = request.user_id
+    user_id = 1
 
     meal = Meal()
 
     serializer = MealSerializer(meal, request.data)
     if serializer.is_valid():
-        Meal.add_meal()
+        Meal.add_meal(user_id=1, type=serializer.validated_data['type'], date=serializer.validated_data['date'])
+        return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     
 # MEAL_ITEM VIEWS
