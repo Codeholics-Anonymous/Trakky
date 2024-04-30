@@ -150,8 +150,11 @@ class MealItem(models.Model):
     product_id = models.IntegerField()
     gram_amount = models.IntegerField()
 
-    def add_product():
-        ...
-    
-    def remove_product():
-        ...
+    @classmethod
+    def add_product(cls, meal_id, product_id, gram_amount):
+        meal_item = cls(meal_id=meal_id, product_id=product_id, gram_amount=gram_amount)
+        meal_item.save()
+        return meal_item
+
+    def remove_product(id):
+        MealItem.objects.get(id=id).delete()
