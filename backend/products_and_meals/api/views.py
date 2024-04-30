@@ -78,7 +78,7 @@ def api_create_product_view(request):
                 serializer.validated_data['carbohydrates'],
                 serializer.validated_data['fat'],
             )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # SUMMARY VIEWS
@@ -128,7 +128,7 @@ def api_create_demand_view(request):
             serializer.validated_data['carbohydrates'],
             serializer.validated_data['fat']
         )
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # MEAL VIEWS
