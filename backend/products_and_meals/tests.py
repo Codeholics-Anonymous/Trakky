@@ -16,9 +16,9 @@ class MacrosTestCase(TestCase):
         self.assertEqual(macros.fat, 50)
 
     def test_wrong_update_macros(self): # input is incorrect
-        class ConcreteMacros(Macros): # create subclass to test abstract class Macros methods
+        class ConcreteMacrosSecond(Macros): # create subclass to test abstract class Macros methods
             ...
-        macros = ConcreteMacros()
+        macros = ConcreteMacrosSecond()
 
         self.assertFalse(macros.update_macros(-50, 3, 120))
         self.assertFalse(macros.update_macros(0, -5, 111))
@@ -168,33 +168,31 @@ class MealTestCase(TestCase):
 class MealItemTestCase(TestCase):
     def setUp(self):
         # Create MealItem for tests
-        self.meal_item1 = MealItem.objects.create( meal_id=1, product_id=1, gram_amount=200)
+        self.meal_item1 = MealItem.objects.create(meal_id=1, product_id=1, gram_amount=200)
 
     def test_add_product(self):
-        meal_item = MealItem.add_product(meal_id=1, product_id=1, gram_amount=200)
+        meal_item = MealItem.add_product(meal_id=2, product_id=1, gram_amount=200)
 
         # Check if mealItem was added correctly
         self.assertIsNotNone(meal_item)
         self.assertEqual(meal_item.gram_amount, 200)
-        self.assertEqual(meal_item.meal_id, 1)
+        self.assertEqual(meal_item.meal_id, 2)
         self.assertEqual(meal_item.product_id, 1)
 
         # Check if mealItem exists in our database
-        saved_product = MealItem.objects.get(meal_item_id=meal_item.meal_item_id)
+        saved_product = MealItem.objects.get(id=meal_item.id)
         self.assertIsNotNone(saved_product)
-        self.assertEqual(saved_product.meal_id, 1)
+        self.assertEqual(saved_product.meal_id, 2)
         self.assertEqual(saved_product.product_id, 1)
         self.assertEqual(saved_product.gram_amount, 200)
 
     def test_remove_product(self):
         # Get the product to remove
         product_to_remove = self.meal_item1
-        product_to_remove_id = product_to_remove.meal_item_id
+        product_to_remove_id = product_to_remove.id
 
         # Remove the product from the meal
-        MealItem.objects.filter(meal_item_id=product_to_remove_id).delete()
+        MealItem.remove_product(id=product_to_remove_id)
 
         # Check if the removed product no longer exists in the database
-        self.assertFalse(MealItem.objects.filter(meal_item_id=product_to_remove_id).exists())
-
-        '''test..'''
+        self.assertFalse(MealItem.objects.filter(id=product_to_remove_id).exists())

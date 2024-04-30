@@ -133,4 +133,28 @@ class Summary(Macros):
         new_summary.save()
         return new_summary
 
+class Meal(models.Model):
+    meal_id = models.AutoField(primary_key=True)
+    user_id = models.IntegerField()
+    type = models.CharField(max_length=250)
+    date = models.DateField()
 
+    @classmethod
+    def add_meal(cls, user_id, type, date):
+        meal = cls(user_id=user_id, type=type, date=date)
+        meal.save()
+        return meal
+
+class MealItem(models.Model):
+    meal_id = models.IntegerField()
+    product_id = models.IntegerField()
+    gram_amount = models.IntegerField()
+
+    @classmethod
+    def add_product(cls, meal_id, product_id, gram_amount):
+        meal_item = cls(meal_id=meal_id, product_id=product_id, gram_amount=gram_amount)
+        meal_item.save()
+        return meal_item
+
+    def remove_product(id):
+        MealItem.objects.get(id=id).delete()
