@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from products_and_meals.models import (Product, Summary, Demand)
+from products_and_meals.models import (Product, Summary, Demand, Meal, MealItem)
 
 
 class ProductSerializer(serializers.ModelSerializer):
