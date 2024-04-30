@@ -136,11 +136,14 @@ class Summary(Macros):
 class Meal(models.Model):
     meal_id = models.AutoField(primary_key=True)
     user_id = models.IntegerField()
-    type = models.CharField()
+    type = models.CharField(max_length=250)
     date = models.DateField()
 
-    def add_meal():
-        ...
+    @classmethod
+    def add_meal(cls, user_id, type, date):
+        meal = cls(user_id=user_id, type=type, date=date)
+        meal.save()
+        return meal
 
 class MealItem(models.Model):
     meal_id = models.IntegerField()
