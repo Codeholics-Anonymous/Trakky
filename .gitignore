@@ -16,7 +16,8 @@ Thumbs.db
 .env
 
 # Ignoruj pliki migracji Django
-/migrations/
+migrations/
+
 
 # Ignoruj pliki bazy danych SQLite (jeśli używasz SQLite)
 *.sqlite3
