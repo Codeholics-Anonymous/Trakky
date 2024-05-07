@@ -1,5 +1,5 @@
 # Ignoruj ustawienia serwera z informacjami poufnymi
-*.settings.py
+settings.py
 
 # Ignoruj pliki i katalogi utworzone przez systemy operacyjne
 .DS_Store
@@ -40,3 +40,6 @@ env/
 # Ignoruj pliki z cache'em
 __pycache__/
 .cache/
+
+# Ignoruj testowanie logowania
+test.rest
