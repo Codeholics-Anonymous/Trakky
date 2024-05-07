@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 
-# Create your views here.
+# USER AUTHENTICATION
 
 @api_view(['POST'])
 def login(request):
@@ -45,3 +45,29 @@ from rest_framework.permissions import IsAuthenticated
 def test_token(request):
     return Response(data={"passed for {}".format(request.user.email)})
 
+# USERPROFILE 
+
+from user.models import UserProfile
+from user.serializers import UserProfileSerializer
+
+@api_view(['GET'])
+def api_detail_userprofile_view(request, userprofile_id):
+    try:
+        userprofile = UserProfile.objects.get(userprofile_id=userprofile_id)
+    except UserProfile.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = UserProfileSerializer(userprofile)
+    return Response(serializer.data)
+
+@api_view(['PUT'])
+def api_update_userprofile_view(request, userprofile_id):
+    try:
+        userprofile = UserProfile.objects.get(userprofile_id=userprofile_id)
+    except UserProfile.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    serializer = UserProfileSerializer(userprofile, request.data)
+    if (UserProfile.update_profile(serializer)):
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
