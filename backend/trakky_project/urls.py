@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from django.urls import include
 
-from register import views
+from user import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
