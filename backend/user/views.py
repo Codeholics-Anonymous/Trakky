@@ -6,6 +6,7 @@ from .serializers import UserSerializer
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
+from .models import UserProfile
 
 # USER AUTHENTICATION
 
@@ -32,6 +33,9 @@ def signup(request):
         user.set_password(request.data['password'])
         user.save()
         token = Token.objects.create(user=user)
+        # create userprofile
+        userprofile = UserProfile(user_id=user.id)
+        userprofile.save()
         return Response({"token" : token.key, "user" : serializer.data})
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -71,3 +75,18 @@ def api_update_userprofile_view(request, userprofile_id):
     if (UserProfile.update_profile(serializer)):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def api_delete_userprofile_view(request, userprofile_id):
+    try:
+        userprofile = UserProfile.objects.get(userprofile_id=userprofile_id)
+    except UserProfile.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    operation = userprofile.delete()
+    data = {}
+    if operation:
+        data['success'] = "deletion successful"
+    else:
+        data['failure'] = 'deletion failed'
+    return Response(data)
