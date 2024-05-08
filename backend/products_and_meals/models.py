@@ -1,9 +1,10 @@
 from django.db import models
+from datetime import datetime, date
 
 class Macros(models.Model):
-    protein = models.IntegerField()
-    carbohydrates = models.IntegerField()
-    fat = models.IntegerField()
+    protein = models.IntegerField(null=True, blank=True, default=0)
+    carbohydrates = models.IntegerField(null=True, blank=True, default=0)
+    fat = models.IntegerField(null=True, blank=True, default=0)
 
     class Meta:
         abstract = True
@@ -64,22 +65,18 @@ class Product(Macros):
 
 class Demand(Macros):
     demand_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField()
-    daily_calory_demand = models.IntegerField()  # To pole będzie obliczane automatycznie
-    date = models.DateField()
-
-    def calculate_daily_calory_demand(self):
-        # Obliczanie dziennej potrzeby kalorycznej na podstawie protein, carbohydrates i fat
-        return (self.protein * 4) + (self.carbohydrates * 4) + (self.fat * 9)
+    user_id = models.IntegerField(blank=True)
+    daily_calory_demand = models.IntegerField(null=True, blank=True, default=0)  # To pole będzie obliczane automatycznie
+    date = models.DateField(null=True, auto_now_add=True, blank=True)
 
     @classmethod
     def update_calories(cls, user_id, protein, fat, carbohydrates):
         try:
-            demand = cls.objects.filter(user_id=user_id).order_by('date').first()
+            demand = cls.objects.get(user_id=user_id,date=date.today())
             demand.protein = protein
             demand.fat = fat
             demand.carbohydrates = carbohydrates
-            demand.daily_calory_demand = demand.calculate_daily_calory_demand()
+            demand.daily_calory_demand = protein * 4 + carbohydrates * 4 + fat * 9
             demand.save()
             return demand
         except cls.DoesNotExist:
