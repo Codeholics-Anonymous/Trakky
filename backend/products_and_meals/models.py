@@ -63,6 +63,7 @@ class Product(Macros):
             return None
 
 class Demand(Macros):
+    demand_id = models.AutoField(primary_key=True)
     user_id = models.IntegerField()
     daily_calory_demand = models.IntegerField()  # To pole będzie obliczane automatycznie
     date = models.DateField()
@@ -100,6 +101,7 @@ class Demand(Macros):
         return new_demand
 
 class Summary(Macros):
+    summary_id = models.AutoField(primary_key=True)
     user_id = models.IntegerField()
     daily_calory_intake = models.IntegerField()
     date = models.DateField()
@@ -146,6 +148,7 @@ class Meal(models.Model):
         return meal
 
 class MealItem(models.Model):
+    meal_item_id = models.AutoField(primary_key=True)
     meal_id = models.IntegerField()
     product_id = models.IntegerField()
     gram_amount = models.IntegerField()
@@ -157,5 +160,5 @@ class MealItem(models.Model):
         return meal_item
 
     @classmethod
-    def remove_product(id):
-        return MealItem.objects.get(id=id).delete()
+    def remove_product(cls, id):
+        return MealItem.objects.get(meal_item_id=id).delete()
