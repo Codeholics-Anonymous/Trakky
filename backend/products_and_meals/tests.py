@@ -42,7 +42,7 @@ class DemandTestCase(TestCase):
 
         # check existence in database
 
-        saved_demand = Demand.objects.get(id=demand.id)
+        saved_demand = Demand.objects.get(demand_id=demand.demand_id)
         self.assertEqual(saved_demand.daily_calory_demand, 2000)
         self.assertEqual(saved_demand.date, date.today())
 
@@ -58,7 +58,7 @@ class DemandTestCase(TestCase):
         self.assertEqual(updated_demand.carbohydrates, 190)
 
         # Check if other records are same as before update
-        unchanged_demand = Demand.objects.get(id=self.demand2.id)
+        unchanged_demand = Demand.objects.get(demand_id=self.demand2.demand_id)
         self.assertEqual(unchanged_demand.daily_calory_demand, 2000)
         self.assertEqual(unchanged_demand.protein, 120)
         self.assertEqual(unchanged_demand.fat, 60)
@@ -86,7 +86,7 @@ class SummaryTestCase(TestCase):
 
         # check existence in database
 
-        saved_summary = Summary.objects.get(id=summary.id)
+        saved_summary = Summary.objects.get(summary_id=summary.summary_id)
         self.assertEqual(saved_summary.daily_calory_intake, 0)
         self.assertEqual(saved_summary.date, date.today())
 
@@ -102,7 +102,7 @@ class SummaryTestCase(TestCase):
         self.assertEqual(updated_summary.carbohydrates, 20)
 
         # Check if other records are same as before update
-        unchanged_summary = Summary.objects.get(id=self.summary2.id)
+        unchanged_summary = Summary.objects.get(summary_id=self.summary2.summary_id)
         self.assertEqual(unchanged_summary.daily_calory_intake, 0)
         self.assertEqual(unchanged_summary.protein, 0)
         self.assertEqual(unchanged_summary.fat, 0)
@@ -154,7 +154,7 @@ class MealTestCase(TestCase):
         meal = Meal.add_meal(user_id=1, type="dinner", date=date.today())
 
         # Check if meal was added correctly
-        self.assertIsNotNone(meal.meal_id)
+        self.assertIsNotNone(meal)
         self.assertEqual(meal.user_id, 1)
         self.assertEqual(meal.type, "dinner")
         self.assertEqual(meal.date, date.today())
@@ -180,7 +180,7 @@ class MealItemTestCase(TestCase):
         self.assertEqual(meal_item.product_id, 1)
 
         # Check if mealItem exists in our database
-        saved_product = MealItem.objects.get(id=meal_item.id)
+        saved_product = MealItem.objects.get(meal_item_id=meal_item.meal_item_id)
         self.assertIsNotNone(saved_product)
         self.assertEqual(saved_product.meal_id, 2)
         self.assertEqual(saved_product.product_id, 1)
@@ -189,10 +189,10 @@ class MealItemTestCase(TestCase):
     def test_remove_product(self):
         # Get the product to remove
         product_to_remove = self.meal_item1
-        product_to_remove_id = product_to_remove.id
+        product_to_remove_id = product_to_remove.meal_item_id
 
         # Remove the product from the meal
         MealItem.remove_product(id=product_to_remove_id)
 
         # Check if the removed product no longer exists in the database
-        self.assertFalse(MealItem.objects.filter(id=product_to_remove_id).exists())
+        self.assertFalse(MealItem.objects.filter(meal_item_id=product_to_remove_id).exists())
