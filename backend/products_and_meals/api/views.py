@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view
 
 from products_and_meals.models import (Product, Summary, Demand, Meal, MealItem)
 from products_and_meals.api.serializers import (ProductSerializer, SummarySerializer, DemandSerializer, MealSerializer, MealItemSerializer)
+from datetime import datetime, date
 
 # PRODUCT VIEWS
 
@@ -104,32 +105,65 @@ def api_delete_summary_view():
 
 @api_view(['GET'])
 def api_detail_demand_view(request, user_id, date):
-    try:
-        demand = Demand.objects.filter(user_id=user_id, date__lte=date).order_by('-date').first()
-    except Demand.DoesNotExist:
+    demand = Demand.objects.filter(user_id=user_id, date__lte=date).order_by('-date').first()
+    if demand is None:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    if request.method == 'GET':
-        serializer = DemandSerializer(demand)
-        return Response(serializer.data)        
+    serializer = DemandSerializer(demand)
+    return Response(serializer.data)        
 
 @api_view(['POST'])
 def api_create_demand_view(request):
-    #user_id = request.user.id
-    user_id = 1
+    
+    user_id = request.user.id
+    serializer = DemandSerializer(data=request.data)
 
-    demand = Demand(user_id=user_id)
-    serializer = DemandSerializer(demand, request.data)
-    if serializer.is_valid():
-        Demand.create_demand(
-            user_id,
-            serializer.validated_data['date'],
-            serializer.validated_data['protein'],
-            serializer.validated_data['carbohydrates'],
-            serializer.validated_data['fat']
+    if not serializer.is_valid():
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    # check if enough data was provided to calculate demand
+
+    only_demand = ( # check if only demand is given
+        (serializer.data['fat'] is None or serializer.data['fat'] == 0) 
+        and 
+        (serializer.data['protein'] is None or serializer.data['protein'] == 0) 
+        and 
+        (serializer.data['carbohydrates'] is None or serializer.data['carbohydrates'] == 0)) 
+    
+    if (only_demand and (serializer.data['daily_calory_demand'] is None or serializer.data['daily_calory_demand'] == 0)):
+        return Response({'information' : 'not provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+    # check if we have actually demand from today in database
+
+    if not Demand.objects.get(user_id=user_id, date=date.today()):
+        demand = Demand(user_id=user_id, date=date.today(), protein=0, fat=0, carbohydrates=0, daily_calory_demand=0)
+        demand.save()
+    
+    if only_demand:
+        Demand.update_calories(
+            user_id=user_id, 
+            protein=((0.2 * serializer.data['daily_calory_demand']) / 4),
+            carbohydrates=((0.55 * serializer.data['daily_calory_demand']) / 4),
+            fat=((0.25 * serializer.data['daily_calory_demand']) / 9)
         )
-        return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        Demand.update_calories(
+            user_id=user_id,
+            protein=serializer.data['protein'],
+            fat=serializer.data['fat'],
+            carbohydrates=serializer.data['carbohydrates']
+        )
+
+    actual_demand = Demand.objects.get(user_id=user_id, date=date.today())
+
+    return Response({
+            'daily_calory_demand' : actual_demand.daily_calory_demand,
+            'protein' : actual_demand.protein,
+            'carbohydrates' : actual_demand.carbohydrates,
+            'fat' : actual_demand.fat,
+        })
+
+
 
 # MEAL VIEWS
 
