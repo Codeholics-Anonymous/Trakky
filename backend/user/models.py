@@ -1,10 +1,10 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 # Create your models here.
 
 class UserProfile(models.Model):
     userprofile_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField(null=False, blank=False)
+    user_id = models.OneToOneField(User, on_delete=models.CASCADE)
     sex = models.CharField(max_length=1)
     weight = models.FloatField(null=True, blank=True, default=0.0)
     height = models.IntegerField(null=True, blank=True, default=0)
