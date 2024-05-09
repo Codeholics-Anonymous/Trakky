@@ -1,12 +1,22 @@
 from django.db import models
+from datetime import datetime, date
+from backend.user.models import UserProfile
 
 class Macros(models.Model):
-    protein = models.IntegerField()
-    carbohydrates = models.IntegerField()
-    fat = models.IntegerField()
+    protein = models.IntegerField(null=True, blank=True, default=0)
+    carbohydrates = models.IntegerField(null=True, blank=True, default=0)
+    fat = models.IntegerField(null=True, blank=True, default=0)
 
     class Meta:
         abstract = True
+
+    def update_macros(self, protein, carbohydrates, fat):
+        if (protein < 0 or carbohydrates < 0 or fat < 0):
+            return False
+        self.protein = protein
+        self.carbohydrates = carbohydrates
+        self.fat = fat
+        return True
 
 class Product(Macros):
     product_id = models.AutoField(primary_key=True)
@@ -55,23 +65,19 @@ class Product(Macros):
             return None
 
 class Demand(Macros):
-    user_id = models.IntegerField()
-    daily_calory_demand = models.IntegerField()  # To pole będzie obliczane automatycznie
-    date = models.DateField()
-
-    def calculate_daily_calory_demand(self):
-        # Obliczanie dziennej potrzeby kalorycznej na podstawie protein, carbohydrates i fat
-        return (self.protein * 4) + (self.carbohydrates * 4) + (self.fat * 9)
+    demand_id = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    daily_calory_demand = models.IntegerField(null=True, blank=True, default=0)  # To pole będzie obliczane automatycznie
+    date = models.DateField(null=True, auto_now_add=True, blank=True)
 
     @classmethod
-    def update_calories(cls, user_id, increase, protein, fat, carbohydrates):
+    def update_calories(cls, user_id, protein, fat, carbohydrates):
         try:
-            demand = cls.objects.filter(user_id=user_id).order_by('date').first()
-            change = (protein * 4) + (carbohydrates * 4) + (fat * 9)
-            if increase:
-                demand.daily_calory_demand += change
-            else:
-                demand.daily_calory_demand -= change
+            demand = cls.objects.get(user_id=user_id,date=date.today())
+            demand.protein = protein
+            demand.fat = fat
+            demand.carbohydrates = carbohydrates
+            demand.daily_calory_demand = protein * 4 + carbohydrates * 4 + fat * 9
             demand.save()
             return demand
         except cls.DoesNotExist:
@@ -93,7 +99,8 @@ class Demand(Macros):
         return new_demand
 
 class Summary(Macros):
-    user_id = models.IntegerField()
+    summary_id = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     daily_calory_intake = models.IntegerField()
     date = models.DateField()
 
@@ -101,6 +108,9 @@ class Summary(Macros):
     def update_calories(cls, user_id, increase, fat, protein, carbohydrates, date):
         try:
             summary = cls.objects.get(user_id=user_id, date=date)
+            summary.protein = protein
+            summary.carbohydrates = carbohydrates
+            summary.fat = fat
             change = (protein * 4) + (carbohydrates * 4) + (fat * 9)
             if increase:
                 summary.daily_calory_intake += change
@@ -123,4 +133,30 @@ class Summary(Macros):
         new_summary.save()
         return new_summary
 
+class Meal(models.Model):
+    meal_id = models.AutoField(primary_key=True)
+    user_profile_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    type = models.CharField(max_length=250)
+    date = models.DateField()
 
+    @classmethod
+    def add_meal(cls, user_profile_id, type, date):
+        meal = cls(user_profile_id=user_profile_id, type=type, date=date)
+        meal.save()
+        return meal
+
+class MealItem(models.Model):
+    meal_item_id = models.AutoField(primary_key=True)
+    meal_id = models.ForeignKey(Meal, on_delete=models.CASCADE)
+    product_id = models.IntegerField()
+    gram_amount = models.IntegerField()
+
+    @classmethod
+    def add_product(cls, meal_id, product_id, gram_amount):
+        meal_item = cls(meal_id=meal_id, product_id=product_id, gram_amount=gram_amount)
+        meal_item.save()
+        return meal_item
+
+    @classmethod
+    def remove_product(cls, id):
+        return MealItem.objects.get(meal_item_id=id).delete()

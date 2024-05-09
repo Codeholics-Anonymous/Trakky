@@ -1,3 +1,6 @@
+# Ignoruj ustawienia serwera z informacjami poufnymi
+settings.py
+
 # Ignoruj pliki i katalogi utworzone przez systemy operacyjne
 .DS_Store
 Thumbs.db
@@ -13,7 +16,8 @@ Thumbs.db
 .env
 
 # Ignoruj pliki migracji Django
-/migrations/
+migrations/
+
 
 # Ignoruj pliki bazy danych SQLite (jeśli używasz SQLite)
 *.sqlite3
@@ -37,3 +41,6 @@ env/
 # Ignoruj pliki z cache'em
 __pycache__/
 .cache/
+
+# Ignoruj testowanie logowania
+test.rest

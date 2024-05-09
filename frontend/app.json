@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "rate-repository-app",
-    "slug": "rate-repository-app",
+    "name": "frontend",
+    "slug": "frontend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
