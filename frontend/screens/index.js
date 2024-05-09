@@ -4,10 +4,10 @@ import DateDisplay from './components/DateDisplay.js';
 import Header from './components/Header.js';
 import MealBox from './components/MealBox.js';
 import ProgressCircles from './components/ProgressCircles.js';
-import styles from './styles/styles';
+import styles from './styles/styles.js';
 
 
-export default function HomeScreen() {
+export function HomeScreen() {
   const [statusBarColor, setStatusBarColor] = useState('#000000');
 
   useEffect(() => {
