@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StatusBar, StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
     scrollContainer: {
@@ -6,6 +6,7 @@ const styles = StyleSheet.create({
     },
     container: {
       flexGrow: 1,
+      paddingTop: StatusBar.currentHeight,
       alignItems: 'center',
       backgroundColor: '#565656',
     },

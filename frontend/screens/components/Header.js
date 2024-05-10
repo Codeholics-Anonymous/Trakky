@@ -6,10 +6,10 @@ const Header = () => {
   return (
     <View style={styles.headerContainer}>
       <View style={styles.centerContainer}>
-        <Image source={require('../img/z123.png')} style={styles.logo} />
+        <Image source={require('../../assets/z123.png')} style={styles.logo} />
         <Text style={styles.header}>TRAKKY</Text>
       </View>
-      <Image source={require('../img/setting.png')} style={styles.options} />
+      <Image source={require('../../assets/setting.png')} style={styles.options} />
     </View>
   );
 };

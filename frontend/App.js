@@ -1,11 +1,6 @@
-import { Text, TouchableOpacity, View } from 'react-native';
-import { Login } from './screens/Login';
-import { Register } from './screens/Register';
-import { HomeScreen } from './screens/index'
+import { HomeScreen } from './screens/HomeScreen';
 export default function App() {
   return (
-    <View>
-      <HomeScreen />
-    </View>
+    <HomeScreen />
   );
 }

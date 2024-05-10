@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { SafeAreaView } from 'react-native';
 import DateDisplay from './components/DateDisplay.js';
 import Header from './components/Header.js';
 import MealBox from './components/MealBox.js';
@@ -15,7 +15,7 @@ export function HomeScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
         <Header />
         <ProgressCircles />
         <DateDisplay />
@@ -23,7 +23,6 @@ export function HomeScreen() {
         <MealBox title="Brunch" />
         <MealBox title="Lunch" />
         <MealBox title="Dinner" />  
-   
-      </View>
+      </SafeAreaView>
   );
 };

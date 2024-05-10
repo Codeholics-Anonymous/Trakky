@@ -6,7 +6,7 @@ const DateDisplay = () => {
   return (
     <TouchableOpacity style={styles.dateContainer}>
       <Text style={styles.date}>Monday, 6.05.2024</Text>
-      <Image source={require('../img/calendar.png')} style={styles.calendar} />
+      <Image source={require('../../assets/calendar.png')} style={styles.calendar} />
     </TouchableOpacity>
   );
 };
