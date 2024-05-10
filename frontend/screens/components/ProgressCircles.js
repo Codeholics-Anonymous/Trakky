@@ -15,9 +15,9 @@ const ProgressCircles = () => {
       <TouchableOpacity style={styles.navText}>
         <Text style={styles.navText}>{"<"}</Text>
       </TouchableOpacity>
-      <CircularProgressBase {...props} value={70} radius={130} activeStrokeColor={'#333333'} inActiveStrokeColor={'#343434'}>
-        <CircularProgressBase {...props} value={44} radius={105} activeStrokeColor={'#F0E68C'} inActiveStrokeColor={'#FFFFE0'}>
-          <CircularProgressBase {...props} value={80} radius={80} activeStrokeColor={'#ffffff'} inActiveStrokeColor={'#eeeeee'}>
+      <CircularProgressBase {...props} value={40} radius={130} activeStrokeColor={'#333333'} inActiveStrokeColor={'#343434'}>
+        <CircularProgressBase {...props} value={74} radius={105} activeStrokeColor={'#F0E68C'} inActiveStrokeColor={'#FFFFE0'}>
+          <CircularProgressBase {...props} value={30} radius={80} activeStrokeColor={'#ffffff'} inActiveStrokeColor={'#eeeeee'}>
             <Text style={styles.caloriesCurrent}>7777kcal</Text>
             <Text style={styles.caloriesGoal}>/9999kcal</Text>
           </CircularProgressBase>
