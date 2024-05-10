@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import datetime, date
+from backend.user.models import UserProfile
 
 class Macros(models.Model):
     protein = models.IntegerField(null=True, blank=True, default=0)
@@ -65,7 +66,7 @@ class Product(Macros):
 
 class Demand(Macros):
     demand_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField(blank=True)
+    user_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     daily_calory_demand = models.IntegerField(null=True, blank=True, default=0)  # To pole będzie obliczane automatycznie
     date = models.DateField(null=True, auto_now_add=True, blank=True)
 
@@ -99,7 +100,7 @@ class Demand(Macros):
 
 class Summary(Macros):
     summary_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField()
+    user_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     daily_calory_intake = models.IntegerField()
     date = models.DateField()
 
@@ -134,19 +135,19 @@ class Summary(Macros):
 
 class Meal(models.Model):
     meal_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField()
+    user_profile_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     type = models.CharField(max_length=250)
     date = models.DateField()
 
     @classmethod
-    def add_meal(cls, user_id, type, date):
-        meal = cls(user_id=user_id, type=type, date=date)
+    def add_meal(cls, user_profile_id, type, date):
+        meal = cls(user_profile_id=user_profile_id, type=type, date=date)
         meal.save()
         return meal
 
 class MealItem(models.Model):
     meal_item_id = models.AutoField(primary_key=True)
-    meal_id = models.IntegerField()
+    meal_id = models.ForeignKey(Meal, on_delete=models.CASCADE)
     product_id = models.IntegerField()
     gram_amount = models.IntegerField()
 
