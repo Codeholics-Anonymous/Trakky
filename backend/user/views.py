@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response 
 
@@ -55,9 +54,12 @@ from user.models import UserProfile
 from user.serializers import UserProfileSerializer
 
 @api_view(['GET'])
-def api_detail_userprofile_view(request, userprofile_id):
+@permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthentication])
+def api_detail_userprofile_view(request):
+    user_id = request.user.id
     try:
-        userprofile = UserProfile.objects.get(userprofile_id=userprofile_id)
+        userprofile = UserProfile.objects.get(user_id=user_id)
     except UserProfile.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -73,7 +75,7 @@ def api_update_userprofile_view(request, userprofile_id):
 
     serializer = UserProfileSerializer(userprofile, request.data)
     if (UserProfile.update_profile(serializer)):
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
