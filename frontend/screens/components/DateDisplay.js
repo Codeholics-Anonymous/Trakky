@@ -1,12 +1,14 @@
 import React from 'react';
-import { Image, Text, TouchableOpacity } from 'react-native';
+import { Text, TouchableOpacity } from 'react-native';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import styles from '../styles/styles';
+
 
 const DateDisplay = () => {
   return (
     <TouchableOpacity style={styles.dateContainer}>
       <Text style={styles.date}>Monday, 6.05.2024</Text>
-      <Image source={require('../../assets/calendar.png')} style={styles.calendar} />
+      <FontAwesome name="calendar" size={20} color="#565656" style={{ marginLeft: 11 }}/>
     </TouchableOpacity>
   );
 };

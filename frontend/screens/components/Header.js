@@ -1,5 +1,6 @@
 import React from 'react';
-import { Image, Text, View } from 'react-native';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import styles from '../styles/styles';
 
 const Header = () => {
@@ -9,7 +10,9 @@ const Header = () => {
         <Image source={require('../../assets/z123.png')} style={styles.logo} />
         <Text style={styles.header}>TRAKKY</Text>
       </View>
-      <Image source={require('../../assets/setting.png')} style={styles.options} />
+      <TouchableOpacity style={{ marginLeft: 'auto', marginRight: 8 }}>
+        <FontAwesome name="bars" size={34} color="#565656"/>
+      </TouchableOpacity>
     </View>
   );
 };

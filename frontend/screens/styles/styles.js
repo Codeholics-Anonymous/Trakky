@@ -96,9 +96,7 @@ const styles = StyleSheet.create({
       alignItems: 'center',       // Centers content horizontally in the container
     },
     dateContainer: {
-        backgroundColor: '#878787',
         flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'center',  // Aligns children to the start; used with absolute positioning of center content
         paddingHorizontal: 15, // Adjusts padding for breathing space on edges
         elevation: 14,
@@ -111,11 +109,6 @@ const styles = StyleSheet.create({
         height: '4.5%',
         width: '50%',
         marginTop: '3%'
-    },
-    calendar: {
-        width: 22,
-        height: 22,
-        marginLeft: 10,
     }
   });
 
