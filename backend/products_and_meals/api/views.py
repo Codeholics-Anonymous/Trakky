@@ -27,22 +27,19 @@ def api_update_product_view(request, product_id):
     except Product.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    if request.method == 'PUT':
-        serializer = ProductSerializer(product, data=request.data)
-        data = {}
-        if serializer.is_valid():
-            Product.update_product(
-                product_id, 
-                serializer.validated_data['name'], 
-                serializer.validated_data['protein'],
-                serializer.validated_data['fat'],
-                serializer.validated_data['carbohydrates'],
-                serializer.validated_data['calories_per_hundred_grams']
-                )
-            data["success"] = "update successful"
-            return Response(data=data)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer = ProductSerializer(product, data=request.data)
+    data = {}
+    if serializer.is_valid():
+        Product.update_product(
+            product_id, 
+            new_name=serializer.validated_data['name'], 
+            new_protein=serializer.validated_data['protein'],
+            new_fat=serializer.validated_data['fat'],
+            new_carbohydrates=serializer.validated_data['carbohydrates']
+            )
+        data["success"] = "update successful"
+        return Response(data=data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'],)
 def api_delete_product_view(request, product_id):

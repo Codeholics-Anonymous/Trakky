@@ -1,11 +1,13 @@
 from django.db import models
+from django.core.validators import MaxValueValidator
 from datetime import datetime, date
-from backend.user.models import UserProfile
+from user.models import UserProfile
+
 
 class Macros(models.Model):
-    protein = models.IntegerField(null=True, blank=True, default=0)
-    carbohydrates = models.IntegerField(null=True, blank=True, default=0)
-    fat = models.IntegerField(null=True, blank=True, default=0)
+    protein = models.PositiveIntegerField(null=True, blank=True, default=0, validators=[MaxValueValidator(250)])
+    carbohydrates = models.PositiveIntegerField(null=True, blank=True, default=0, validators=[MaxValueValidator(1000)])
+    fat = models.PositiveIntegerField(null=True, blank=True, default=0, validators=[MaxValueValidator(200)])
 
     class Meta:
         abstract = True
@@ -20,45 +22,23 @@ class Macros(models.Model):
 
 class Product(Macros):
     product_id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=250)
-    calories_per_hundred_grams = models.IntegerField(blank=True, null=True)  # Ustawiamy jako opcjonalne
-
-    def calculate_calories_per_hundred_grams(self):
-        # Obliczamy kalorie na 100 gram na podstawie protein, carbohydrates i fat
-        calories_from_protein = self.protein * 4
-        calories_from_carbs = self.carbohydrates * 4
-        calories_from_fat = self.fat * 9
-        total_calories = calories_from_protein + calories_from_carbs + calories_from_fat
-        return total_calories
-
-    def clean(self):
-        # Automatycznie obliczamy calories_per_hundred_grams, jeśli nie podano wartości
-        if self.calories_per_hundred_grams is None:
-            self.calories_per_hundred_grams = self.calculate_calories_per_hundred_grams()
+    name = models.CharField(max_length=250, blank=False, null=False)
+    calories_per_hundred_grams = models.PositiveIntegerField(blank=True, null=True) # it will be calculated using protein, carbohydrates and fat
 
     @classmethod
-    def add_product(cls, name, calories_per_hundred_grams=None, protein=0, carbohydrates=0, fat=0):
-        new_product = cls(name=name, calories_per_hundred_grams=calories_per_hundred_grams,
-                          protein=protein, carbohydrates=carbohydrates, fat=fat)
-        if calories_per_hundred_grams is None:
-            new_product.full_clean()  # Wywołujemy clean() przed zapisaniem
+    def add_product(cls, name, protein, carbohydrates, fat):
+        new_product = cls(name=name, protein=protein, carbohydrates=carbohydrates, fat=fat, calories_per_hundred_grams=(4*protein + 4*carbohydrates + 9*fat))
         new_product.save()
         return new_product
 
     @classmethod
-    def update_product(cls, product_id, new_name, new_protein, new_carbohydrates, new_fat, new_calories=None):
+    def update_product(cls, product_id, new_name, new_protein, new_carbohydrates, new_fat):
         try:
             product = cls.objects.get(product_id=product_id)
             product.name = new_name
             product.protein = new_protein
             product.carbohydrates = new_carbohydrates
             product.fat = new_fat
-            if new_calories is not None:
-                product.calories_per_hundred_grams = new_calories
-            else:
-                # Obliczamy calories_per_hundred_grams na nowo
-                product.calories_per_hundred_grams = product.calculate_calories_per_hundred_grams()
-            product.full_clean()  # Wywołujemy clean() przed zapisaniem
             product.save()
             return product
         except cls.DoesNotExist:
@@ -135,7 +115,7 @@ class Summary(Macros):
 
 class Meal(models.Model):
     meal_id = models.AutoField(primary_key=True)
-    user_profile_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    user_profile_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True)
     type = models.CharField(max_length=250)
     date = models.DateField()
 
