@@ -39,6 +39,7 @@ class Product(Macros):
             product.protein = new_protein
             product.carbohydrates = new_carbohydrates
             product.fat = new_fat
+            product.calories_per_hundred_grams = 4 * product.protein + 4 * product.carbohydrates + 9 * product.fat 
             product.save()
             return product
         except cls.DoesNotExist:
