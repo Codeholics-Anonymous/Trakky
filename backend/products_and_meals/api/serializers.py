@@ -4,7 +4,7 @@ from products_and_meals.models import (Product, Summary, Demand, Meal, MealItem)
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = '__all__'
+        exclude = ['product_id']
 
 class SummarySerializer(serializers.ModelSerializer):
     class Meta:
