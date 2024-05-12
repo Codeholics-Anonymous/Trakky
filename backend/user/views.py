@@ -25,18 +25,32 @@ def login(request):
 
 @api_view(['POST'])
 def signup(request):
-    serializer = UserSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        user = User.objects.get(username=request.data['username'])
-        user.set_password(request.data['password'])
+    register_data = request.data['register_data']
+    userprofile_data = request.data['userprofile_data']
+    register_serializer = UserSerializer(data=register_data)
+    userprofile_serializer = UserProfileSerializer(data=userprofile_data)
+    
+    # REGISTER PART
+    if register_serializer.is_valid():
+        register_serializer.save()
+        user = User.objects.get(username=register_data['username'])
+        user.set_password(register_data['password'])
         user.save()
+        register_serializer.validated_data['password'] = user.password
         token = Token.objects.create(user=user)
-        # create userprofile
-        userprofile = UserProfile(user_id=user.id)
-        userprofile.save()
-        return Response({"token" : token.key, "user" : serializer.data})
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response(register_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # USERPROFILE PART
+    if (userprofile_serializer.is_valid()):
+        userprofile_serializer.validated_data['user_id'] = user.id
+        #TODO CREATE DEMAND
+        userprofile_serializer.save()
+        return Response({"token" : token.key, "user" : register_serializer.validated_data, "profile" : userprofile_serializer.validated_data})
+    else:
+        user.delete() # if userprofile information hasn't been entered, we have to delete user
+        return Response(userprofile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
