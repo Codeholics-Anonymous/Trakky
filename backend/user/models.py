@@ -1,17 +1,25 @@
 from django.db import models
 from django.contrib.auth.models import User
-# Create your models here.
+from django.core.validators import ValidationError
+
+def validate_user_gender(value):
+    if (value not in ('Male', 'Female', 'Other')):
+        raise ValidationError("Incorrect gender.")
+
+def validate_user_goal(value):
+    if (value not in ('Lose Weight', 'Gain Weight', 'Maintain Weight')):
+        raise ValidationError("Incorrect weight goal.")
 
 class UserProfile(models.Model):
     userprofile_id = models.AutoField(primary_key=True)
-    user_id = models.OneToOneField(User, on_delete=models.CASCADE)
-    sex = models.CharField(max_length=1)
-    weight = models.FloatField(null=True, blank=True, default=0.0)
-    height = models.IntegerField(null=True, blank=True, default=0)
-    activity_level = models.FloatField(null=True, blank=True, default=1)
-    birth_date = models.DateField(null=True, blank=True, default='2000-01-01')
-    daily_calory_demand = models.IntegerField(null=True, blank=True, default=0.0)
-    user_goal = models.CharField(max_length=10, null=True, blank=True, default=0)
+    user_id = models.IntegerField(null=True, blank=True)
+    sex = models.CharField(max_length=6, validators=[validate_user_gender], null=False, blank=False)
+    weight = models.FloatField(null=False, blank=False)
+    height = models.IntegerField(null=False, blank=False)
+    activity_level = models.FloatField(null=False, blank=False, default=1) #TODO MAKE CHOICES TO CONVERT STRING DATA INTO NUMBERS TO EASILY CALCULATE CALORIC NEEDS
+    birth_date = models.DateField(null=False, blank=False)
+    daily_calory_demand = models.IntegerField(null=True, blank=True)
+    user_goal = models.CharField(max_length=15, null=False, blank=False)
 
     @classmethod
     def update_profile(cls, serializer):

@@ -6,9 +6,9 @@ from user.models import UserProfile
 
 
 class Macros(models.Model):
-    protein = models.PositiveIntegerField(null=True, blank=True, default=0, validators=[MaxValueValidator(250)])
-    carbohydrates = models.PositiveIntegerField(null=True, blank=True, default=0, validators=[MaxValueValidator(1000)])
-    fat = models.PositiveIntegerField(null=True, blank=True, default=0, validators=[MaxValueValidator(200)])
+    protein = models.PositiveIntegerField(null=True, blank=True, default=0)
+    carbohydrates = models.PositiveIntegerField(null=True, blank=True, default=0)
+    fat = models.PositiveIntegerField(null=True, blank=True, default=0)
 
     class Meta:
         abstract = True
@@ -52,35 +52,33 @@ class Product(Macros):
 
 class Demand(Macros):
     demand_id = models.AutoField(primary_key=True)
-    user_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    daily_calory_demand = models.IntegerField(null=True, blank=True, default=0)  # To pole będzie obliczane automatycznie
-    date = models.DateField(null=True, auto_now_add=True, blank=True)
+    user_id = models.IntegerField(blank=True, null=True)
+    daily_calory_demand = models.PositiveIntegerField(null=False, blank=False, validators=[MaxValueValidator(12250)], default=0)
+    date = models.DateField(null=True, blank=True)
 
     @classmethod
-    def update_calories(cls, user_id, protein, fat, carbohydrates):
+    def update_calories(cls, user_id, protein, fat, carbohydrates, daily_calory_demand):
         try:
-            demand = cls.objects.get(user_id=user_id,date=date.today())
+            demand = cls.objects.get(user_id=user_id, date=date.today())
             demand.protein = protein
             demand.fat = fat
             demand.carbohydrates = carbohydrates
-            demand.daily_calory_demand = protein * 4 + carbohydrates * 4 + fat * 9
+            demand.daily_calory_demand = daily_calory_demand
             demand.save()
             return demand
         except cls.DoesNotExist:
             return None
 
     @classmethod
-    def create_demand(cls, user_id, date, protein=0, carbohydrates=0, fat=0):
-        # Tworzenie nowego obiektu Demand
+    def create_demand(cls, user_id, date, protein, carbohydrates, fat, daily_calory_demand):
         new_demand = cls(
             user_id=user_id,
             date=date,
             protein=protein,
             carbohydrates=carbohydrates,
-            fat=fat
+            fat=fat,
+            daily_calory_demand=daily_calory_demand
         )
-        # Obliczanie i ustawienie daily_calory_demand na podstawie wartości makroskładników
-        new_demand.daily_calory_demand = new_demand.calculate_daily_calory_demand()
         new_demand.save()
         return new_demand
 
