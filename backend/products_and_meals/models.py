@@ -6,9 +6,9 @@ from user.models import UserProfile
 
 
 class Macros(models.Model):
-    protein = models.PositiveIntegerField(null=True, blank=True, default=0, validators=[MaxValueValidator(400)])
-    carbohydrates = models.PositiveIntegerField(null=True, blank=True, default=0, validators=[MaxValueValidator(1500)])
-    fat = models.PositiveIntegerField(null=True, blank=True, default=0, validators=[MaxValueValidator(250)])
+    protein = models.PositiveIntegerField(null=True, blank=True, default=0)
+    carbohydrates = models.PositiveIntegerField(null=True, blank=True, default=0)
+    fat = models.PositiveIntegerField(null=True, blank=True, default=0)
 
     class Meta:
         abstract = True
@@ -53,8 +53,8 @@ class Product(Macros):
 class Demand(Macros):
     demand_id = models.AutoField(primary_key=True)
     user_id = models.IntegerField(blank=True, null=True)
-    daily_calory_demand = models.PositiveIntegerField(null=False, blank=False, validators=[MaxValueValidator(10000)])
-    date = models.DateField(blank=True)
+    daily_calory_demand = models.PositiveIntegerField(null=False, blank=False, validators=[MaxValueValidator(10000)], default=0)
+    date = models.DateField(null=True, blank=True)
 
     @classmethod
     def update_calories(cls, user_id, protein, fat, carbohydrates, daily_calory_demand):
