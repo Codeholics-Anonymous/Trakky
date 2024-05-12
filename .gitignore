@@ -44,3 +44,6 @@ __pycache__/
 
 # Ignoruj testowanie logowania
 test.rest
+
+# Ignoruj zbędne pliki z frontendu
+.idea

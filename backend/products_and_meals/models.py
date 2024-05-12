@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MaxValueValidator
+from django.contrib.auth.models import User
 from datetime import datetime, date
 from user.models import UserProfile
 
@@ -22,12 +23,17 @@ class Macros(models.Model):
 
 class Product(Macros):
     product_id = models.AutoField(primary_key=True)
+    user_id = models.IntegerField(blank=True, null=True) # foreign key to user_id at django User class
     name = models.CharField(max_length=250, blank=False, null=False)
-    calories_per_hundred_grams = models.PositiveIntegerField(blank=True, null=True) # it will be calculated using protein, carbohydrates and fat
+
+    @property
+    def calories_per_hundred_grams(self):
+        if (self.protein is not None) and (self.carbohydrates is not None) and (self.fat is not None):
+            return 4 * self.protein + 4 * self.carbohydrates + 9 * self.fat
 
     @classmethod
-    def add_product(cls, name, protein, carbohydrates, fat):
-        new_product = cls(name=name, protein=protein, carbohydrates=carbohydrates, fat=fat, calories_per_hundred_grams=(4*protein + 4*carbohydrates + 9*fat))
+    def add_product(cls, user_id, name, protein, carbohydrates, fat):
+        new_product = cls(user_id=user_id, name=name, protein=protein, carbohydrates=carbohydrates, fat=fat)
         new_product.save()
         return new_product
 
@@ -39,7 +45,6 @@ class Product(Macros):
             product.protein = new_protein
             product.carbohydrates = new_carbohydrates
             product.fat = new_fat
-            product.calories_per_hundred_grams = 4 * product.protein + 4 * product.carbohydrates + 9 * product.fat 
             product.save()
             return product
         except cls.DoesNotExist:
