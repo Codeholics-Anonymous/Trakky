@@ -8,6 +8,10 @@ from products_and_meals.models import (Product, Summary, Demand, Meal, MealItem)
 from products_and_meals.api.serializers import (ProductSerializer, SummarySerializer, DemandSerializer, MealSerializer, MealItemSerializer)
 from datetime import datetime, date
 
+from rest_framework.decorators import authentication_classes, permission_classes
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 # PRODUCT VIEWS
 
 @api_view(['GET'])
@@ -18,7 +22,8 @@ def api_detail_product_view(request, product_id):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     serializer = ProductSerializer(product)
-    return Response(serializer.data)
+    data = serializer.data|{'calories_per_hundred_grams' : product.calories_per_hundred_grams}
+    return Response(data)
 
 @api_view(['PUT'])
 def api_update_product_view(request, product_id):
@@ -58,14 +63,13 @@ def api_delete_product_view(request, product_id):
         return Response(data=data)
 
 @api_view(['POST'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def api_create_product_view(request):
-    #account = request.user #when we will have users authentication it will work
-
-    product = Product()
-
-    serializer = ProductSerializer(product, data=request.data)
+    serializer = ProductSerializer(data=request.data)
     if serializer.is_valid():
         added_product = Product.add_product(
+            user_id=request.user.id,
             name=serializer.validated_data['name'],
             protein=serializer.validated_data['protein'],
             carbohydrates=serializer.validated_data['carbohydrates'],
