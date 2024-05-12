@@ -12,18 +12,23 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
+from django.db.models import Q # to make more complex queries in db
+
 # PRODUCT VIEWS
 
 @api_view(['GET'])
-def api_detail_product_view(request, product_id):
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_detail_product_view(request, product_name):
     try:
-        product = Product.objects.get(product_id=product_id)
+        product = Product.objects.filter(Q(name__icontains=product_name) & (Q(user_id=1) | Q(user_id=request.user.id)))
     except Product.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    serializer = ProductSerializer(product)
-    data = serializer.data|{'calories_per_hundred_grams' : product.calories_per_hundred_grams}
-    return Response(data)
+    serializer = ProductSerializer(product, many=True)
+    for i in range(len(serializer.data)):
+        serializer.data[i]['calories_per_hundred_grams'] = product[i].calories_per_hundred_grams
+    return Response(serializer.data)
 
 @api_view(['PUT'])
 def api_update_product_view(request, product_id):
@@ -99,68 +104,58 @@ def api_delete_summary_view():
     ...
 
 # DEMAND VIEWS
+# ways to create demand:
+# 1 option - we are creating demand when basing on data that user gave us
+# 2 option - user can set his demand by himself (by giving us protein, carbohydrates, fat and calories)
 
 @api_view(['GET'])
-def api_detail_demand_view(request, user_id, date):
-    demand = Demand.objects.filter(user_id=user_id, date__lte=date).order_by('-date').first()
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_detail_demand_view(request, date):
+    demand = Demand.objects.filter(user_id=request.user.id, date__lte=date).order_by('-date').first()
     if demand is None:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     serializer = DemandSerializer(demand)
-    return Response(serializer.data)        
+    return Response(serializer.data)
 
 @api_view(['POST'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def api_create_demand_view(request):
-    
     user_id = request.user.id
     serializer = DemandSerializer(data=request.data)
 
+    EPSILON = 10 # absolute calorie error
+
     if not serializer.is_valid():
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # check if enough data was provided to calculate demand
+    calories_sum = 4 * serializer.validated_data['protein'] + 4 * serializer.validated_data['carbohydrates'] + 9 * serializer.validated_data['fat']
+    if (calories_sum > serializer.validated_data['daily_calory_demand'] + EPSILON):
+        return Response({'Macros calories too high' : f'{calories_sum}'})
+    elif (calories_sum < serializer.validated_data['daily_calory_demand'] - EPSILON):
+        return Response({'Macros calories too low' : f'{calories_sum}'})
 
-    only_demand = ( # check if only demand is given
-        (serializer.data['fat'] is None or serializer.data['fat'] == 0) 
-        and 
-        (serializer.data['protein'] is None or serializer.data['protein'] == 0) 
-        and 
-        (serializer.data['carbohydrates'] is None or serializer.data['carbohydrates'] == 0)) 
-    
-    if (only_demand and (serializer.data['daily_calory_demand'] is None or serializer.data['daily_calory_demand'] == 0)):
-        return Response({'information' : 'not provided'}, status=status.HTTP_400_BAD_REQUEST)
-
-    # check if we have actually demand from today in database
-
-    if not Demand.objects.get(user_id=user_id, date=date.today()):
-        demand = Demand(user_id=user_id, date=date.today(), protein=0, fat=0, carbohydrates=0, daily_calory_demand=0)
-        demand.save()
-    
-    if only_demand:
+    try:
+        Demand.objects.get(user_id=user_id, date=date.today()) 
         Demand.update_calories(
             user_id=user_id, 
-            protein=((0.2 * serializer.data['daily_calory_demand']) / 4),
-            carbohydrates=((0.55 * serializer.data['daily_calory_demand']) / 4),
-            fat=((0.25 * serializer.data['daily_calory_demand']) / 9)
-        )
-    else:
-        Demand.update_calories(
+            protein=serializer.validated_data['protein'],
+            carbohydrates=serializer.validated_data['carbohydrates'],
+            fat=serializer.validated_data['fat'],
+            daily_calory_demand=serializer.validated_data['daily_calory_demand'])
+    except Demand.DoesNotExist:
+        Demand.create_demand(
             user_id=user_id,
-            protein=serializer.data['protein'],
-            fat=serializer.data['fat'],
-            carbohydrates=serializer.data['carbohydrates']
-        )
+            protein=serializer.validated_data['protein'],
+            carbohydrates=serializer.validated_data['carbohydrates'],
+            fat=serializer.validated_data['fat'],
+            daily_calory_demand=serializer.validated_data['daily_calory_demand'],
+            date=date.today()
+            )
 
-    actual_demand = Demand.objects.get(user_id=user_id, date=date.today())
-
-    return Response({
-            'daily_calory_demand' : actual_demand.daily_calory_demand,
-            'protein' : actual_demand.protein,
-            'carbohydrates' : actual_demand.carbohydrates,
-            'fat' : actual_demand.fat,
-        })
-
-
+    return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
 
 # MEAL VIEWS
 
