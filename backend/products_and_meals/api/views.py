@@ -66,13 +66,16 @@ def api_delete_product_view(request, product_id):
         else:
             data["failure"] = "deletion failed"
         return Response(data=data)
-#TODO CHECK IF THIS OBJECT DOES NOT EXIST IN DATABASE - IF EXISTS, DON'T ADD DUPLICATE
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_create_product_view(request):
     serializer = ProductSerializer(data=request.data)
     if serializer.is_valid():
+        # check if this product does exist in database
+        if Product.objects.filter(name=serializer.validated_data['name']).exists():
+            return Response({'Product' : 'already exist'})
         # check if sum of macros amount isn't larger than 100g
         macros_amount = serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']
         if macros_amount > 100:
