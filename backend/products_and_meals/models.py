@@ -23,7 +23,7 @@ class Macros(models.Model):
 
 class Product(Macros):
     product_id = models.AutoField(primary_key=True)
-    #user_id = models.ForeignKey('auth.User', on_delete=models.CASCADE, null=True)
+    user_id = models.IntegerField(blank=True, null=True) # foreign key to user_id at django User class
     name = models.CharField(max_length=250, blank=False, null=False)
 
     @property
@@ -32,8 +32,8 @@ class Product(Macros):
             return 4 * self.protein + 4 * self.carbohydrates + 9 * self.fat
 
     @classmethod
-    def add_product(cls, name, protein, carbohydrates, fat):
-        new_product = cls(name=name, protein=protein, carbohydrates=carbohydrates, fat=fat)
+    def add_product(cls, user_id, name, protein, carbohydrates, fat):
+        new_product = cls(user_id=user_id, name=name, protein=protein, carbohydrates=carbohydrates, fat=fat)
         new_product.save()
         return new_product
 
