@@ -53,7 +53,7 @@ class Product(Macros):
 class Demand(Macros):
     demand_id = models.AutoField(primary_key=True)
     user_id = models.IntegerField(blank=True, null=True)
-    daily_calory_demand = models.PositiveIntegerField(null=False, blank=False, validators=[MaxValueValidator(10000)], default=0)
+    daily_calory_demand = models.PositiveIntegerField(null=False, blank=False, validators=[MaxValueValidator(12250)], default=0)
     date = models.DateField(null=True, blank=True)
 
     @classmethod
