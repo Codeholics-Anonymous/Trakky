@@ -1,36 +1,35 @@
 import { Text, View, TextInput, TouchableOpacity } from 'react-native';
-import React from 'react';
-import { StatusBar } from 'expo-status-bar';
+import { Logo250x250 } from '../components/Logo250x250';
 
-export const Login = () => {
+export function Login() {
   return (
-    <View className='bg-gray-50'>
+    <View className="bg-gray-100">
       <View className='flex min-h-full flex-col justify-center px-6 py-12 lg:px-8'>
         <View className='sm:mx-auto sm:w-full sm:max-w-sm'>
-          <Text className="text-black text-6xl font-bold text-center m-10">LOGO</Text>
-          <Text className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">Login in to your account</Text>
+          <Logo250x250 className="mx-auto w-1/2"></Logo250x250>
+          <Text className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-black">Login to your Account</Text>
         </View>
           
         <View className='m-2'>          
-          <View className='flex items-center mx-8 space-y-4'>
-            <View className='bg-gray-100 p-5 rounded-2xl w-full border border-gray-800 shadow-inner'>
-              <TextInput className='text-xl' placeholder='Enter Login' />
+          <View className='flex items-center mx-8 space-y-4 '>
+            <View className='bg-gray-100 p-5 rounded-full w-full border-2 border-dark-green shadow-xl shadow-dark-green'>
+              <TextInput className='text-xl' placeholder='Login' />
             </View>
 
-            <View className='bg-gray-100 p-5 rounded-2xl w-full mb-3 border border-gray-800 shadow-inner'>
-              <TextInput  className='text-xl' placeholder='Enter Password'secureTextEntry/>
+            <View className='bg-gray-100 p-5 rounded-full w-full border-2 border-dark-green shadow-xl shadow-dark-green'>
+              <TextInput  className='text-xl' placeholder='Password'secureTextEntry/>
             </View>
             
             <View className='w-full'>
-              <TouchableOpacity className='bg-green-200 p-3 rounded-2xl'>
-                <Text className='text-center text-xl font-bold'>Login</Text>
+              <TouchableOpacity className='bg-light-green p-3 rounded-full shadow-xl shadow-dark-green'>
+                <Text className='text-center text-xl font-bold'>Sign In</Text>
               </TouchableOpacity>
             </View>
           </View>
 
-          <View>
-            <Text className='text-center'>Don`t have account?</Text>
-            <Text className='text-center'>Register Now!</Text>
+          <View className="fixed w-full p-4">
+            <Text className='text-center'>Don`t have an account?</Text>
+            <Text className='text-center'>Sign Up!</Text>
           </View>
         </View>
       </View>
