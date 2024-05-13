@@ -10,6 +10,30 @@ from .models import UserProfile
 from products_and_meals.models import Demand
 from datetime import date
 
+# PASSWORD VALIDATION METHOD
+
+from django.core.exceptions import ValidationError
+
+def password_validation(password):
+    # check if password is alphanumeric
+    if (not password.isalnum()):
+        return 1
+    # check password length
+    if (len(password) < 8):
+        return 2
+    # check if password isn't a digit
+    if (password.isdigit()):
+        return 3
+    # check if password contains at least one digit
+    contain_digit = False
+    for x in password:
+        if x.isdigit():
+            contain_digit=True
+            break
+    if not contain_digit:
+        return 4
+    return 0
+
 # USER AUTHENTICATION
 
 @api_view(['POST'])
@@ -35,6 +59,16 @@ def signup(request):
     
     # REGISTER PART
     if register_serializer.is_valid():
+        # validate password
+        password_validation_result = password_validation(register_serializer.validated_data['password'])
+        if (password_validation_result == 1):
+            return Response({"Password" : "must contain only letters or digits"}, status=status.HTTP_400_BAD_REQUEST)
+        elif (password_validation_result == 2):
+            return Response({"Password" : "must contain at least 8 characters"}, status=status.HTTP_400_BAD_REQUEST)
+        elif (password_validation_result == 3):
+            return Response({"Password" : "must contain at least one letter"}, status=status.HTTP_400_BAD_REQUEST)
+        elif (password_validation_result == 4):
+            return Response({"Password" : "must contain at least one digit"}, status=status.HTTP_400_BAD_REQUEST)
         register_serializer.save()
         user = User.objects.get(username=register_data['username'])
         user.set_password(register_data['password'])
