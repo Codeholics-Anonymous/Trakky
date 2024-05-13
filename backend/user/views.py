@@ -7,6 +7,9 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from .models import UserProfile
 
+from products_and_meals.models import Demand
+from datetime import date
+
 # USER AUTHENTICATION
 
 @api_view(['POST'])
@@ -44,13 +47,28 @@ def signup(request):
     # USERPROFILE PART
     if (userprofile_serializer.is_valid()):
         userprofile_serializer.validated_data['user_id'] = user.id
-        #TODO CREATE DEMAND
         userprofile_serializer.save()
-        return Response({"token" : token.key, "user" : register_serializer.validated_data, "profile" : userprofile_serializer.validated_data})
     else:
         user.delete() # if userprofile information hasn't been entered, we have to delete user
         return Response(userprofile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # DEMAND PART BASED ON USERPROFILE INFO
+    daily_calory_demand = UserProfile.calculate_demand(
+        weight=userprofile_serializer.validated_data['weight'],
+        height=userprofile_serializer.validated_data['height'],
+        birth_date=userprofile_serializer.validated_data['birth_date'],
+        work_type=userprofile_serializer.validated_data['work_type'],
+        sex=userprofile_serializer.validated_data['sex'],
+        user_goal=userprofile_serializer.validated_data['user_goal']
+        )
+    # approximated amounts of macros
+    # 40/30/30 rule - 40% carbohydrates, 30% protein, 30% fat
+    protein = (0.3*daily_calory_demand) / 4
+    carbohydrates = (0.4*daily_calory_demand) / 4
+    fat = (0.3*daily_calory_demand) / 9
+    Demand.create_demand(user_id=user.id, date=date.today(), protein=protein, carbohydrates=carbohydrates, fat=fat, daily_calory_demand=daily_calory_demand)
+
+    return Response({"token" : token.key, "user" : register_serializer.validated_data, "profile" : userprofile_serializer.validated_data})
 
 from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
