@@ -1,7 +1,7 @@
 import { Text, View, TextInput, TouchableOpacity } from 'react-native';
 import { Logo250x250 } from '../components/Logo250x250';
 
-export function Register() {
+export function Register( {navigation} ) {
   return (
     <View className="bg-gray-100">
       <View className='flex min-h-full flex-col justify-center px-6 py-12 lg:px-8'>
@@ -24,8 +24,8 @@ export function Register() {
               <TextInput  className='text-xl' placeholder='Confirm Password'secureTextEntry/>
             </View>
             
-            <View className='w-full'>
-              <TouchableOpacity className='bg-light-green p-3 rounded-full shadow-xl shadow-dark-green'>
+            <View className='w-full' >
+              <TouchableOpacity className='bg-light-green p-3 rounded-full shadow-xl shadow-dark-green ' onPress={() => navigation.navigate("UserDetails")}>
                 <Text className='text-center text-xl font-bold'>Sign Up</Text>
               </TouchableOpacity>
             </View>
