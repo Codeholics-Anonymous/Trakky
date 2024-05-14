@@ -1,29 +1,34 @@
-import React, { useState } from 'react';
-import { SafeAreaView, StatusBar } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { SafeAreaView, ScrollView, StatusBar } from 'react-native';
 import DateDisplay from '../components/DateDisplay.js';
 import Header from '../components/Header.js';
 import MealBox from '../components/MealBox.js';
 import ProgressCircle from '../components/ProgressCircle.js';
 
 export function HomeScreen() {
-  // State to toggle between ProgressCircles and ProgressCircleContainer2
   const [showDefaultProgress, setShowDefaultProgress] = useState(true);
 
-  // Handler to toggle the state
   const toggleProgress = () => {
-    console.log('Toggle pressed');  // Check if this logs in the console when clicked
+    console.log('Toggle pressed');
     setShowDefaultProgress(!showDefaultProgress);
   };
 
+  useEffect(() => {
+    StatusBar.setBackgroundColor('#363636', true); // 'true' to animate the color transition, color dark-grey
+    StatusBar.setBarStyle('light-content', true); // changes the color of the status bar items to light
+  }, []);
+
   return (
-    <SafeAreaView className="bg-dark-gray h-full items-center pt-safe-top" style={{paddingTop: StatusBar.currentHeight}}>
-      <Header />
-      <ProgressCircle />
-      <DateDisplay />
-      <MealBox title="Breakfast" />
-      <MealBox title="Brunch" />
-      <MealBox title="Lunch" />
-      <MealBox title="Dinner" />  
+    <SafeAreaView className="bg-dark-gray flex-1 items-center pt-status-bar pb-5" style={{ paddingTop: StatusBar.currentHeight }}>
+      <ScrollView className="w-full pb-10" contentContainerStyle={{ alignItems: 'center' }}>
+        <Header />
+        <ProgressCircle />
+        <DateDisplay />
+        <MealBox title="Breakfast" />
+        <MealBox title="Brunch" />
+        <MealBox title="Lunch" />
+        <MealBox title="Dinner" />
+      </ScrollView>
     </SafeAreaView>
   );
 };
