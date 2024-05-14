@@ -35,7 +35,7 @@ class UserProfile(models.Model):
         if (work_type == 1): # Physical work
             NEAT = BMR*0.4
         else: # Mental work
-            NEAT = BMR*0.25
+            NEAT = BMR*0.2
         result = BMR + NEAT
         # CHECK USER GOAL
         if (user_goal == -1):
