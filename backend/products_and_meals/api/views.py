@@ -94,22 +94,23 @@ def api_create_product_view(request):
 
 # SUMMARY VIEWS
 
-# we only need GET request because other changes are caused by mealitem and meal classes
-
 @api_view(['GET'])
-def api_detail_summary_view(request, user_id, date):
-    try:
-        summary = Summary.objects.get(user_id=user_id, date=date)
-    except Summary.DoesNotExists:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+@permission_classes([IsAuthenticated])
+def api_detail_summary_view(request, starting_date, ending_date):
+    summaries = Summary.objects.filter(user_id=request.user.id, date__range=(starting_date, ending_date))
 
-    if request.method == 'GET':
-        serializer = SummarySerializer(summary, many=True)
-        return Response(serializer.data)
+    # empty summaries aren't store in database but we don't need to imitate they exist (anyway they will be included as 0)
+    calories_sum = 0
+    protein_sum = 0
+    carbohydrates_sum = 0
+    fat_sum = 0
+    for x in summaries:
+        calories_sum += x.daily_calory_intake
+        protein_sum += x.protein
+        carbohydrates_sum += x.carbohydrates
+        fat_sum += x.fat
 
-@api_view(['DELETE'])
-def api_delete_summary_view():
-    ...
+    return Response({'calories_sum' : calories_sum, 'protein_sum' : protein_sum, 'carbohydrates_sum' : carbohydrates_sum, 'fat_sum' : fat_sum})
 
 # DEMAND VIEWS
 # ways to create demand:
@@ -148,7 +149,8 @@ def api_create_demand_view(request):
     try:
         # we cannot overwrite basic demand created during registration
         first_user_demand = Demand.objects.filter(user_id=user_id).order_by('demand_id').first()
-        if (Demand.objects.filter(user_id=user_id, date=date.today()).order_by('-demand_id').first() == first_user_demand):
+        found_demand = Demand.objects.filter(user_id=user_id, date=date.today()).order_by('-demand_id').first()
+        if ((found_demand == first_user_demand) or (found_demand is None)):
             raise Demand.DoesNotExist() 
         Demand.update_calories(
             user_id=user_id, 
