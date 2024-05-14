@@ -1,6 +1,10 @@
-import { HomeScreen } from './screens/HomeScreen';
+import { View, Text, Image } from "react-native";
+import { Login } from "./screens/Login";
+import { Register } from "./screens/Register";
 export default function App() {
   return (
-    <HomeScreen />
+    <View>
+      <Register></Register>
+    </View>
   );
 }
