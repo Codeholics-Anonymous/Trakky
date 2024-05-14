@@ -262,29 +262,42 @@ def api_delete_meal_item_view(request, meal_item_id):
         data['failure'] = 'deletion failed'
     return Response(data=data)
 
-# if we are adding first mealitem, we also have to create meal for user
+def create_mealitem(type, user_id, request_data, date):
+    # MEAL EXISTENCE
+    if not Meal.objects.filter(user_id=user_id, date=date, type=type).exists():
+        Meal.add_meal(user_id=user_id, type=type, date=date)
+    # SUMMARY EXISTENCE
+    if not Summary.objects.filter(user_id=user_id, date=date).exists():
+        Summary.create_summary(user_id=user_id, date=date)
+    # MEAL ITEM PART
+    meal_id = Meal.objects.get(user_id=user_id, date=date, type=type).meal_id # now we can get meal_id because we know that meal exists
+    serializer = MealItemSerializer(data=request_data)
+    if serializer.is_valid():
+        product_to_add = Product.objects.get(product_id=serializer.validated_data['product_id'])
+        MealItem.add_product(meal_id=meal_id, product_id=product_to_add.product_id, gram_amount=serializer.validated_data['gram_amount'])
+        # calculate product macros and calories (gram_amount of product can be different than 100)
+        protein, carbohydrates, fat = Product.calculate_nutrition(gram_amount=serializer.validated_data['gram_amount'], product=product_to_add)
+        # update summary
+        Summary.update_calories(user_id=user_id, increase=True, protein=round(protein), carbohydrates=round(carbohydrates), fat=round(fat), date=date)
+        # create data to return
+        data = serializer.validated_data|{'name' : product_to_add.name, 'calories' : round((4*protein + 4*carbohydrates + 9*fat)), 'protein' : protein, 'carbohydrates' : carbohydrates, 'fat' : fat}
+        return Response(data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_create_mealitem_breakfast_view(request, date):
-    # MEAL PART
-    # check if breakfast meal exists
-    meal_exists = False
-    if (Meal.objects.filter(user_id=request.user.id, date=date).exists()):
-        meal_exists = True
-    # add meal if it doesn't exist
-    if (not meal_exists):
-        Meal.add_meal(user_id=request.user.id, type="breakfast", date=date)
-    # MEAL ITEM PART
-    meal_id = Meal.objects.get(user_id=request.user.id, date=date).meal_id # now we can get meal_id because we know that meal exists
-    serializer = MealItemSerializer(data=request.data)
-    #TODO UPDATE SUMMARY CALORIES AND MACROS AMOUNT FROM THIS DAY
-    if serializer.is_valid():
-        MealItem.add_product(meal_id=meal_id, product_id=serializer.validated_data['product_id'], gram_amount=serializer.validated_data['gram_amount'])
-        # calculate product macros and calories (gram_amount of product can be different than 100)
-        product_to_add = Product.objects.get(product_id=serializer.validated_data['product_id'])
-        protein, carbohydrates, fat = Product.calculate_nutrition(gram_amount=serializer.validated_data['gram_amount'], product=product_to_add)
-        data = serializer.validated_data|{'name' : product_to_add.name, 'calories' : int((4*protein + 4*carbohydrates + 9*fat)), 'protein' : protein, 'carbohydrates' : carbohydrates, 'fat' : fat}
-        return Response(data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return create_mealitem(type="breakfast", user_id=request.user.id, request_data=request.data, date=date)
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_create_mealitem_lunch_view(request, date):
+    return create_mealitem(type="lunch", user_id=request.user.id, request_data=request.data, date=date)
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_create_mealitem_dinner_view(request, date):
+    return create_mealitem(type="dinner", user_id=request.user.id, request_data=request.data, date=date)

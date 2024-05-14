@@ -11,7 +11,7 @@ class DemandAdmin(admin.ModelAdmin):
 
 @admin.register(Summary)
 class SummaryAdmin(admin.ModelAdmin):
-    list_display = ('summary_id', 'user_id', 'date', 'daily_calory_intake')
+    list_display = ('summary_id', 'user_id', 'date', 'daily_calory_intake', 'protein', 'carbohydrates', 'fat')
 
 @admin.register(Meal)
 class MealAdmin(admin.ModelAdmin):
