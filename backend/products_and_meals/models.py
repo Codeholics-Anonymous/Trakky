@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth.models import User
 from datetime import datetime, date
 from user.models import UserProfile
@@ -89,22 +89,25 @@ class Demand(Macros):
 
 class Summary(Macros):
     summary_id = models.AutoField(primary_key=True)
-    user_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    daily_calory_intake = models.IntegerField()
+    user_id = models.IntegerField(null=False, blank=False)
+    daily_calory_intake = models.PositiveIntegerField()
     date = models.DateField()
 
     @classmethod
     def update_calories(cls, user_id, increase, fat, protein, carbohydrates, date):
         try:
             summary = cls.objects.get(user_id=user_id, date=date)
-            summary.protein = protein
-            summary.carbohydrates = carbohydrates
-            summary.fat = fat
             change = (protein * 4) + (carbohydrates * 4) + (fat * 9)
             if increase:
                 summary.daily_calory_intake += change
+                summary.protein += protein
+                summary.carbohydrates += carbohydrates
+                summary.fat += fat
             else:
                 summary.daily_calory_intake -= change
+                summary.protein -= protein
+                summary.carbohydrates -= carbohydrates
+                summary.fat -= fat
             summary.save()
             return summary
         except cls.DoesNotExist:
@@ -138,7 +141,7 @@ class MealItem(models.Model):
     meal_item_id = models.AutoField(primary_key=True)
     meal_id = models.IntegerField(null=True, blank=True)
     product_id = models.IntegerField(null=False, blank=False)
-    gram_amount = models.IntegerField()
+    gram_amount = models.PositiveIntegerField(null=False, blank=False, validators=[MinValueValidator(1)])
 
     @classmethod
     def add_product(cls, meal_id, product_id, gram_amount):
