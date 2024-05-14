@@ -115,7 +115,7 @@ def api_delete_summary_view():
 # ways to create demand:
 # 1 option - we are creating demand basing on data that user gave us during registration 
 # 2 option - user can set his demand by himself (by giving us protein, carbohydrates, fat and calories) (this option is presented below)
-
+#TODO WE HAVE TO KNOW WHAT DEMAND IS USER CURRENTLY USING - BASIC DEMAND OR HIS ACTUAL DEMAND
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
@@ -134,7 +134,7 @@ def api_create_demand_view(request):
     user_id = request.user.id
     serializer = DemandSerializer(data=request.data)
 
-    EPSILON = 10 # absolute calorie error
+    EPSILON = 20 # absolute calorie error
 
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -146,7 +146,10 @@ def api_create_demand_view(request):
         return Response({'Macros calories too low' : f'{calories_sum}'})
 
     try:
-        Demand.objects.get(user_id=user_id, date=date.today()) 
+        # we cannot overwrite basic demand created during registration
+        first_user_demand = Demand.objects.filter(user_id=user_id).order_by('demand_id').first()
+        if (Demand.objects.filter(user_id=user_id, date=date.today()).order_by('-demand_id').first() == first_user_demand):
+            raise Demand.DoesNotExist() 
         Demand.update_calories(
             user_id=user_id, 
             protein=serializer.validated_data['protein'],

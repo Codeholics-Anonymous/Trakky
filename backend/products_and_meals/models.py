@@ -58,13 +58,13 @@ class Product(Macros):
 class Demand(Macros):
     demand_id = models.AutoField(primary_key=True)
     user_id = models.IntegerField(blank=True, null=True)
-    daily_calory_demand = models.PositiveIntegerField(null=False, blank=False, validators=[MaxValueValidator(12250)], default=0)
+    daily_calory_demand = models.PositiveIntegerField(null=False, blank=False, validators=[MaxValueValidator(12250)])
     date = models.DateField(null=True, blank=True)
 
     @classmethod
     def update_calories(cls, user_id, protein, fat, carbohydrates, daily_calory_demand):
         try:
-            demand = cls.objects.get(user_id=user_id, date=date.today())
+            demand = cls.objects.filter(user_id=user_id, date=date.today()).order_by('-demand_id').first() # filter and not get because it can be more than 1 demand in creation account day
             demand.protein = protein
             demand.fat = fat
             demand.carbohydrates = carbohydrates

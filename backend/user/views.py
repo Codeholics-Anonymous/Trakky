@@ -82,7 +82,7 @@ from rest_framework.permissions import IsAuthenticated
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def test_token(request):
-    return Response(data={"passed for {}".format(request.user.username)})
+    return Response(data={f"passed for {request.user.username}"})
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
@@ -102,28 +102,34 @@ from user.models import UserProfile
 from user.serializers import UserProfileSerializer
 
 @api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
-@authentication_classes([TokenAuthentication])
 def api_detail_userprofile_view(request):
-    user_id = request.user.id
     try:
-        userprofile = UserProfile.objects.get(user_id=user_id)
+        userprofile = UserProfile.objects.get(user_id=request.user.id)
     except UserProfile.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     serializer = UserProfileSerializer(userprofile)
     return Response(serializer.data)
 
+from utils.products_and_meals_utils import find_basic_demand
+
 @api_view(['PUT'])
-def api_update_userprofile_view(request, userprofile_id):
+@permission_classes([IsAuthenticated])
+def api_update_userprofile_view(request):
     try:
-        userprofile = UserProfile.objects.get(userprofile_id=userprofile_id)
+        userprofile = UserProfile.objects.get(user_id=request.user.id)
     except UserProfile.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     serializer = UserProfileSerializer(userprofile, request.data)
     if (UserProfile.update_profile(serializer)):
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # update basic demand if user changed something in profile
+        basic_demand = find_basic_demand(request.user.id)
+        basic_demand.daily_calory_demand = UserProfile.calculate_demand(weight=serializer.validated_data['weight'], height=serializer.validated_data['height'], birth_date=serializer.validated_data['birth_date'], work_type=serializer.validated_data['work_type'], sex=serializer.validated_data['sex'], user_goal=serializer.validated_data['user_goal'])
+        basic_demand.save()
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
