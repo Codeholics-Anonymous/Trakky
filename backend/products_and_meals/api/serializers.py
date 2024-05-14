@@ -10,7 +10,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        exclude = ['product_id', 'user_id']
+        exclude = ['user_id']
 
 class SummarySerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,4 +34,4 @@ class MealSerializer(serializers.ModelSerializer):
 class MealItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = MealItem
-        fields = '__all__'
+        exclude = ['meal_item_id', 'meal_id']
