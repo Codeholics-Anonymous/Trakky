@@ -19,7 +19,7 @@ from products_and_meals.api.views import (
                 api_detail_meal_item_view,
                 api_update_meal_item_view,
                 api_delete_meal_item_view,
-                api_create_meal_item_view
+                api_create_mealitem_breakfast_view
             )
 
 app_name = "products_and_meals"
@@ -44,5 +44,5 @@ urlpatterns = [
     path('meal/item/<int:meal_item_id>', api_detail_meal_item_view, name='meal_item_detail'),
     path('meal/item/<int:meal_item_id>/update', api_update_meal_item_view, name='meal_item_update'),
     path('meal/item/<int:meal_item_id>/delete', api_delete_meal_item_view, name='meal_item_delete'),
-    path('create_mealitem/', api_create_meal_item_view, name='meal_item_create')
+    path('create_mealitem/breakfast/<str:date>/', api_create_mealitem_breakfast_view, name='create_mealitem_breakfast')
 ]
