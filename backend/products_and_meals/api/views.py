@@ -134,7 +134,7 @@ def api_create_demand_view(request):
     user_id = request.user.id
     serializer = DemandSerializer(data=request.data)
 
-    EPSILON = 10 # absolute calorie error
+    EPSILON = 20 # absolute calorie error
 
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -146,7 +146,10 @@ def api_create_demand_view(request):
         return Response({'Macros calories too low' : f'{calories_sum}'})
 
     try:
-        Demand.objects.get(user_id=user_id, date=date.today()) 
+        # we cannot overwrite basic demand created during registration
+        first_user_demand = Demand.objects.filter(user_id=user_id).order_by('demand_id').first()
+        if (Demand.objects.filter(user_id=user_id, date=date.today()).order_by('-demand_id').first() == first_user_demand):
+            raise Demand.DoesNotExist() 
         Demand.update_calories(
             user_id=user_id, 
             protein=serializer.validated_data['protein'],
