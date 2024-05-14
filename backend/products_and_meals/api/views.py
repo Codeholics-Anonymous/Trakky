@@ -113,8 +113,8 @@ def api_delete_summary_view():
 
 # DEMAND VIEWS
 # ways to create demand:
-# 1 option - we are creating demand when basing on data that user gave us
-# 2 option - user can set his demand by himself (by giving us protein, carbohydrates, fat and calories)
+# 1 option - we are creating demand basing on data that user gave us during registration 
+# 2 option - user can set his demand by himself (by giving us protein, carbohydrates, fat and calories) (this option is presented below)
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
@@ -262,12 +262,29 @@ def api_delete_meal_item_view(request, meal_item_id):
         data['failure'] = 'deletion failed'
     return Response(data=data)
 
-@api_view(['POST'])
-def api_create_meal_item_view(request):
-    meal_item = MealItem()
-    serializer = MealItemSerializer(meal_item, request.data)
+# if we are adding first mealitem, we also have to create meal for user
 
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_create_mealitem_breakfast_view(request, date):
+    # MEAL PART
+    # check if breakfast meal exists
+    meal_exists = False
+    if (Meal.objects.filter(user_id=request.user.id, date=date).exists()):
+        meal_exists = True
+    # add meal if it doesn't exist
+    if (not meal_exists):
+        Meal.add_meal(user_id=request.user.id, type="breakfast", date=date)
+    # MEAL ITEM PART
+    meal_id = Meal.objects.get(user_id=request.user.id, date=date).meal_id # now we can get meal_id because we know that meal exists
+    serializer = MealItemSerializer(data=request.data)
+    #TODO UPDATE SUMMARY CALORIES AND MACROS AMOUNT FROM THIS DAY
     if serializer.is_valid():
-        MealItem.add_product(serializer.validated_data['meal_id'], serializer.validated_data['product_id'], serializer.validated_data['gram_amount'])
-        return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
+        MealItem.add_product(meal_id=meal_id, product_id=serializer.validated_data['product_id'], gram_amount=serializer.validated_data['gram_amount'])
+        # calculate product macros and calories (gram_amount of product can be different than 100)
+        product_to_add = Product.objects.get(product_id=serializer.validated_data['product_id'])
+        protein, carbohydrates, fat = Product.calculate_nutrition(gram_amount=serializer.validated_data['gram_amount'], product=product_to_add)
+        data = serializer.validated_data|{'name' : product_to_add.name, 'calories' : int((4*protein + 4*carbohydrates + 9*fat)), 'protein' : protein, 'carbohydrates' : carbohydrates, 'fat' : fat}
+        return Response(data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
