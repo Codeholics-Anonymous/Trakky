@@ -5,6 +5,6 @@ app_name = 'user'
 
 urlpatterns = [
     path('userprofile/', api_detail_userprofile_view, name='userprofile_detail'),
-    path('userprofile/update/<int:userprofile_id>/', api_update_userprofile_view, name='userprofile_update'),
+    path('userprofile/update/', api_update_userprofile_view, name='userprofile_update'),
     path('userprofile/delete/<int:userprofile_id>/', api_delete_userprofile_view, name='userprofile_delete')
 ]
