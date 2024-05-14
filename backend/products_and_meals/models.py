@@ -50,6 +50,11 @@ class Product(Macros):
         except cls.DoesNotExist:
             return None
 
+    @classmethod
+    def calculate_nutrition(cls, gram_amount, product): # calculate nutrition basing on different amount (g) of product
+        factor = (gram_amount / 100) # we have information about 100g of product
+        return (factor*product.protein, factor*product.carbohydrates, factor*product.fat)
+
 class Demand(Macros):
     demand_id = models.AutoField(primary_key=True)
     user_id = models.IntegerField(blank=True, null=True)
@@ -119,20 +124,20 @@ class Summary(Macros):
 
 class Meal(models.Model):
     meal_id = models.AutoField(primary_key=True)
-    user_profile_id = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True)
+    user_id = models.IntegerField(null=True, blank=True)
     type = models.CharField(max_length=250)
     date = models.DateField()
 
     @classmethod
-    def add_meal(cls, user_profile_id, type, date):
-        meal = cls(user_profile_id=user_profile_id, type=type, date=date)
+    def add_meal(cls, user_id, type, date):
+        meal = cls(user_id=user_id, type=type, date=date)
         meal.save()
         return meal
 
 class MealItem(models.Model):
     meal_item_id = models.AutoField(primary_key=True)
-    meal_id = models.ForeignKey(Meal, on_delete=models.CASCADE)
-    product_id = models.IntegerField()
+    meal_id = models.IntegerField(null=True, blank=True)
+    product_id = models.IntegerField(null=False, blank=False)
     gram_amount = models.IntegerField()
 
     @classmethod
