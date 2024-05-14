@@ -1,7 +1,7 @@
-import { Text, View, TextInput, TouchableOpacity } from 'react-native';
+import { Text, View, TextInput, TouchableOpacity, Button } from 'react-native';
 import { Logo250x250 } from '../components/Logo250x250';
 
-export function Login() {
+export function Login( {navigation} ) {
   return (
     <View className="bg-gray-100">
       <View className='flex min-h-full flex-col justify-center px-6 py-12 lg:px-8'>
@@ -29,10 +29,12 @@ export function Login() {
 
           <View className="fixed w-full p-4">
             <Text className='text-center'>Don`t have an account?</Text>
-            <Text className='text-center'>Sign Up!</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+              <Text title="Sign Up!" className='text-center text-xl text-dark-green'>Sign Up!</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </View> 
     </View>
   )
 }
