@@ -64,7 +64,7 @@ class Demand(Macros):
     @classmethod
     def update_calories(cls, user_id, protein, fat, carbohydrates, daily_calory_demand):
         try:
-            demand = cls.objects.filter(user_id=user_id, date=date.today()).order_by('-demand_id').first()
+            demand = cls.objects.filter(user_id=user_id, date=date.today()).order_by('-demand_id').first() # filter and not get because it can be more than 1 demand in creation account day
             demand.protein = protein
             demand.fat = fat
             demand.carbohydrates = carbohydrates

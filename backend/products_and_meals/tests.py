@@ -15,7 +15,7 @@ class MacrosTestCase(TestCase):
         self.assertEqual(macros.carbohydrates, 200)
         self.assertEqual(macros.fat, 50)
 
-    def test_wrong_update_macros(self): # input is incorrect
+    def test_wrong_update_calories(self): # input is incorrect
         class ConcreteMacrosSecond(Macros): # create subclass to test abstract class Macros methods
             ...
         macros = ConcreteMacrosSecond()
