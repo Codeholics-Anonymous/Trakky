@@ -15,7 +15,7 @@ class SummaryAdmin(admin.ModelAdmin):
 
 @admin.register(Meal)
 class MealAdmin(admin.ModelAdmin):
-    list_display = ('meal_id', 'user_profile_id', 'type', 'date')
+    list_display = ('meal_id', 'user_id', 'type', 'date')
 
 @admin.register(MealItem)
 class MealItemAdmin(admin.ModelAdmin):
