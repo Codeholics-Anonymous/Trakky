@@ -147,7 +147,7 @@ def api_detail_summary_view(request, starting_date, ending_date):
         carbohydrates_sum += x.carbohydrates
         fat_sum += x.fat
 
-    return Response({'calories_sum' : calories_sum, 'protein_sum' : protein_sum, 'carbohydrates_sum' : carbohydrates_sum, 'fat_sum' : fat_sum})
+    return Response({'calories_sum' : round(calories_sum), 'protein_sum' : round(protein_sum, 1), 'carbohydrates_sum' : round(carbohydrates_sum, 1), 'fat_sum' : round(fat_sum, 1)})
 
 # DEMAND VIEWS
 # ways to create demand:
@@ -261,10 +261,10 @@ def api_detail_meal_view(request, date):
             'mealitem_id' : x.meal_item_id,
             'product_id' : product.product_id,
             'name' : product.name,
-            'protein' : product_macros_info[0],
-            'carbohydrates' : product_macros_info[1],
-            'fat' : product_macros_info[2],
-            'calories' : product_macros_info[0]*4+product_macros_info[1]*4+product_macros_info[2]*9,
+            'protein' : round(product_macros_info[0], 1),
+            'carbohydrates' : round(product_macros_info[1], 1),
+            'fat' : round(product_macros_info[2], 1),
+            'calories' : round(product_macros_info[0]*4+product_macros_info[1]*4+product_macros_info[2]*9),
             'grams' : x.gram_amount
         }
         if (breakfast_meal_id is not None) and (x.meal_id == breakfast_meal_id):
@@ -365,9 +365,9 @@ def create_mealitem(type, user_id, request_data, date):
         # calculate product macros and calories (gram_amount of product can be different than 100)
         protein, carbohydrates, fat = Product.calculate_nutrition(gram_amount=serializer.validated_data['gram_amount'], product=product_to_add)
         # update summary
-        Summary.update_calories(user_id=user_id, increase=True, protein=round(protein), carbohydrates=round(carbohydrates), fat=round(fat), date=date)
+        Summary.update_calories(user_id=user_id, increase=True, protein=protein, carbohydrates=carbohydrates, fat=fat, date=date)
         # create data to return
-        data = serializer.validated_data|{'name' : product_to_add.name, 'calories' : round((4*protein + 4*carbohydrates + 9*fat)), 'protein' : protein, 'carbohydrates' : carbohydrates, 'fat' : fat}
+        data = serializer.validated_data|{'name' : product_to_add.name, 'calories' : round((4*protein + 4*carbohydrates + 9*fat)), 'protein' : round(protein, 1), 'carbohydrates' : round(carbohydrates, 1), 'fat' : round(fat, 1)}
         return Response(data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
