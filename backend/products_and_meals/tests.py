@@ -2,8 +2,6 @@ from django.test import TestCase
 from .models import *
 from datetime import date
 
-# Create your tests here.
-
 class MacrosTestCase(TestCase):
     def test_correct_update_macros(self): # input is correct
         class ConcreteMacros(Macros): # create subclass to test abstract class Macros methods
@@ -196,3 +194,47 @@ class MealItemTestCase(TestCase):
 
         # Check if the removed product no longer exists in the database
         self.assertFalse(MealItem.objects.filter(meal_item_id=product_to_remove_id).exists())
+
+from rest_framework.test import APIClient
+from django.urls import reverse
+from rest_framework.authtoken.models import Token
+
+class ProductRequests(TestCase):
+    def setUp(self):
+        self.client = APIClient() # create API client
+        self.user = User.objects.create(username="test_user", password="test_password")
+        self.token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key) # add authorization token to each request user will send
+
+    def test_post_and_get_product(self):
+        # create own product
+        data = {
+            'name' : 'test_product',
+            'protein' : 10,
+            'carbohydrates' : 20,
+            'fat' : 10
+        }
+        post_response = self.client.post('/api/create_product/', data)
+        self.assertEqual(post_response.status_code, 201)
+        self.assertEqual(post_response.data, data|{'calories_per_hundred_grams' : 4*data['protein']+4*data['carbohydrates']+9*data['fat']})
+        get_response = self.client.get('/api/product/test_product/')
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(get_response.data[0]['name'], 'test_product')
+        # create product with incorrect amount of macros
+        incorrect_data = {
+            'name' : 'incorrect_product',
+            'protein' : -1,
+            'carbohydrates' : 0,
+            'fat' : 10
+        }
+        incorrect_post_response = self.client.post('/api/create_product/', incorrect_data)
+        self.assertEqual(incorrect_post_response.status_code, 400)
+        incorrect_macros_sum_data = {
+            'name' : 'incorrect_product',
+            'protein' : 10,
+            'carbohydrates' : 50,
+            'fat' : 41
+        }
+        incorrect_macros_sum_response = self.client.post('/api/create_product/', incorrect_macros_sum_data)
+        self.assertEqual(incorrect_macros_sum_response.status_code, 400)
+        self.assertEqual(incorrect_macros_sum_response.data['Macros'], f"amount to high ({incorrect_macros_sum_data['protein']+incorrect_macros_sum_data['carbohydrates']+incorrect_macros_sum_data['fat']}/{100})")

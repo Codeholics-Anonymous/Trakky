@@ -38,17 +38,14 @@ class Product(Macros):
         return new_product
 
     @classmethod
-    def update_product(cls, product_id, new_name, new_protein, new_carbohydrates, new_fat):
-        try:
-            product = cls.objects.get(product_id=product_id)
-            product.name = new_name
-            product.protein = new_protein
-            product.carbohydrates = new_carbohydrates
-            product.fat = new_fat
-            product.save()
-            return product
-        except cls.DoesNotExist:
-            return None
+    def update_product(cls, product_id, name, protein, carbohydrates, fat):
+        product = cls.objects.get(product_id=product_id)
+        product.name = name
+        product.protein = protein
+        product.carbohydrates = carbohydrates
+        product.fat = fat
+        product.save()
+        return product
 
     @classmethod
     def calculate_nutrition(cls, gram_amount, product): # calculate nutrition basing on different amount (g) of product
