@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 
 from rest_framework import status
 from rest_framework.response import Response
-from utils.responses import custom_response
+from utils.responses import custom_response, not_found_response
 from rest_framework.decorators import api_view
 
 from products_and_meals.models import (Product, Summary, Demand, Meal, MealItem)
@@ -25,13 +25,15 @@ from utils.products_and_meals_utils import above_upper_limit
 def api_detail_product_view(request, product_name):
     try:
         product = Product.objects.filter(Q(name__icontains=product_name) & (Q(user_id=1) | Q(user_id=request.user.id)))
+        if (product is None):
+            raise Product.DoesNotExist
     except Product.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return not_found_response()
 
     serializer = ProductSerializer(product, many=True)
     for i in range(len(serializer.data)):
         serializer.data[i]['calories_per_hundred_grams'] = product[i].calories_per_hundred_grams
-    return Response(serializer.data)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['PUT'])
 def api_update_product_view(request, product_id):
