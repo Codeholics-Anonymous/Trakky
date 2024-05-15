@@ -19,8 +19,8 @@ export function HomeScreen() {
   }, []);
 
   return (
-    <SafeAreaView className="bg-dark-gray flex-1 items-center pt-status-bar pb-5" style={{ paddingTop: StatusBar.currentHeight }}>
-      <ScrollView className="w-full pb-10" contentContainerStyle={{ alignItems: 'center' }}>
+    <SafeAreaView className="bg-light-green flex-1" style={{ flex: 1, paddingTop: StatusBar.currentHeight }}>
+      <ScrollView className="w-full" contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
         <Header />
         <ProgressCircle />
         <DateDisplay />
