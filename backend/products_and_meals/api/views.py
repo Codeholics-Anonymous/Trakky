@@ -136,6 +136,12 @@ def api_create_product_view(request):
 def api_detail_summary_view(request, starting_date, ending_date):
     summaries = Summary.objects.filter(user_id=request.user.id, date__range=(starting_date, ending_date))
 
+    d_start = datetime.strptime(starting_date, "%Y-%m-%d")
+    d_end = datetime.strptime(ending_date, "%Y-%m-%d")
+
+    if (d_start > d_end):
+        return custom_response("Data", "range is incorrect", status.HTTP_400_BAD_REQUEST)
+
     # empty summaries aren't store in database but we don't need to imitate they exist (anyway they will be included as 0)
     calories_sum = 0
     protein_sum = 0
