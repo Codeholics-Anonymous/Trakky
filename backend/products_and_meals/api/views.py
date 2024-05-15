@@ -35,6 +35,8 @@ def api_detail_product_view(request, product_name):
         serializer.data[i]['calories_per_hundred_grams'] = product[i].calories_per_hundred_grams
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+from utils.products_and_meals_utils import find_mealitems
+
 @api_view(['PUT'])
 def api_update_product_view(request, product_id):
     try:
@@ -47,15 +49,45 @@ def api_update_product_view(request, product_id):
 
     serializer = ProductSerializer(data=request.data)
     if serializer.is_valid():
+        # check if sum of macros isn't larger than 100g
         if above_upper_limit(serializer.validated_data['protein'], serializer.validated_data['carbohydrates'], serializer.validated_data['fat'], limit=100):
             return custom_response("Macros", f"amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100})", status.HTTP_400_BAD_REQUEST) 
-        Product.update_product(
+        # update today summary if this product was added (optimization - don't update past summaries)
+        mealitems = find_mealitems(user_id=request.user.id, product_id=product_id, date=date.today()) # amount of products added today to summary
+        mealitems_amount = len(mealitems)
+        if (mealitems_amount != 0):
+            # calculate product amount (grams)
+            mealitems_gram_amount = 0
+            for x in mealitems:
+                mealitems_gram_amount += x.gram_amount
+            # call function to calculate how many protein, carbohydrates and fat we have (using information about grams of product)
+            all_product_macros = Product.calculate_nutrition(gram_amount=mealitems_gram_amount, product=product)
+            # subtract calories, because past macros and calories of product aren't current
+            Summary.update_calories( 
+                user_id=request.user.id, 
+                increase=0, 
+                protein=all_product_macros[0], 
+                carbohydrates=all_product_macros[1], 
+                fat=all_product_macros[2], 
+                date=date.today()
+                )
+        # update product information provided by user
+        updated_product = Product.update_product(
             product_id=product_id, 
             name=serializer.validated_data['name'], 
             protein=serializer.validated_data['protein'],
             fat=serializer.validated_data['fat'],
             carbohydrates=serializer.validated_data['carbohydrates']
             )
+        # after product update, we have to increase number of calories and macros in summary
+        all_updated_product_macros = Product.calculate_nutrition(gram_amount=mealitems_gram_amount, product=updated_product)
+        Summary.update_calories(
+            user_id=request.user.id, 
+            increase=1, 
+            protein=all_updated_product_macros[0],
+            carbohydrates=all_updated_product_macros[1],
+            fat=all_updated_product_macros[2],
+            date=date.today())
         return custom_response("Success", "update successful")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
