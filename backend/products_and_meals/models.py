@@ -87,7 +87,7 @@ class Demand(Macros):
 class Summary(Macros):
     summary_id = models.AutoField(primary_key=True)
     user_id = models.IntegerField(null=False, blank=False)
-    daily_calory_intake = models.PositiveIntegerField()
+    daily_calory_intake = models.PositiveIntegerField(null=False, blank=False)
     date = models.DateField()
 
     @classmethod
@@ -138,7 +138,7 @@ class MealItem(models.Model):
     meal_item_id = models.AutoField(primary_key=True)
     meal_id = models.IntegerField(null=True, blank=True)
     product_id = models.IntegerField(null=False, blank=False)
-    gram_amount = models.PositiveIntegerField(null=False, blank=False, validators=[MinValueValidator(1)])
+    gram_amount = models.PositiveIntegerField(null=False, blank=False, validators=[MinValueValidator(1), MaxValueValidator(2000)])
 
     @classmethod
     def add_product(cls, meal_id, product_id, gram_amount):
@@ -148,4 +148,4 @@ class MealItem(models.Model):
 
     @classmethod
     def remove_product(cls, id):
-        return MealItem.objects.get(meal_item_id=id).delete()
+        return cls.objects.get(meal_item_id=id).delete()
