@@ -26,3 +26,11 @@ def find_mealitems(user_id, product_id, date):
     # find all mealitems
     mealitems = MealItem.objects.filter(query, product_id=product_id)
     return mealitems
+
+# calculate macros for basic demand
+def basic_macros(demand):
+    # 50/20/30 - 50% carbohydrates, 20% protein, 30% fat
+    protein = round(((0.2*demand) / 4), 1)
+    carbohydrates = round(((0.5*demand) / 4), 1)
+    fat = round(((0.3*demand) / 9), 1)
+    return (protein, carbohydrates, fat)
