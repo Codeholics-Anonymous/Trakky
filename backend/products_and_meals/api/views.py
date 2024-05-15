@@ -209,28 +209,68 @@ def api_create_demand_view(request):
 
 # MEAL VIEWS
 
+# get meal requests returns information about each meal from selected day with all mealitems
+
 @api_view(['GET'])
-def api_detail_meal_view(request, meal_id):
+@permission_classes([IsAuthenticated])
+def api_detail_meal_view(request, date):
     try:
-        meal = Meal.objects.get(meal_id=meal_id)
+        meal = Meal.objects.filter(user_id=request.user.id, date=date)
     except Meal.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    
-    serializer = MealSerializer(meal)
-    return Response(serializer.data) 
 
-@api_view(['PUT'])
-def api_update_meal_view(request, meal_id):
-    try:
-        meal = Meal.objects.get(meal_id=meal_id)
-    except Meal.DoesNotExist:
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+    # find mealitems added by user at this date
 
-    serializer = MealSerializer(meal, request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response({'success' : 'update successful'})
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    query = Q()
+
+    for x in meal:
+        query = Q(meal_id=x.meal_id) | query
+
+    mealitems = MealItem.objects.filter(query)
+
+    # now get from this information all products info
+
+    breakfast_meal_id = lunch_meal_id = dinner_meal_id = None
+
+    for x in meal:
+        if (x.type=='breakfast'):
+            breakfast_meal_id = x.meal_id
+        elif (x.type=='lunch'):
+            lunch_meal_id = x.meal_id
+        elif (x.type=='dinner'):
+            dinner_meal_id = x.meal_id
+
+    data = {
+        'breakfast' : {},
+        'lunch' : {},
+        'dinner' : {}
+    }
+
+    i = j = k = 0 # iterators to add products named as product0, product1, ...
+
+    for x in mealitems:
+        product = Product.objects.get(product_id=x.product_id) # get product from database
+        product_macros_info = Product.calculate_nutrition(gram_amount=x.gram_amount, product=product) # calculate macros per gram_amount
+        product_info = {
+            'product_id' : product.product_id,
+            'name' : product.name,
+            'protein' : product_macros_info[0],
+            'carbohydrates' : product_macros_info[1],
+            'fat' : product_macros_info[2],
+            'calories' : product_macros_info[0]*4+product_macros_info[1]*4+product_macros_info[2]*9,
+            'grams' : x.gram_amount
+        }
+        if (breakfast_meal_id is not None) and (x.meal_id == breakfast_meal_id):
+            data['breakfast'][f'product{i}'] = product_info
+            i += 1
+        elif (lunch_meal_id is not None) and (x.meal_id == lunch_meal_id):
+            data['lunch'][f'product{j}'] = product_info
+            j += 1
+        if (dinner_meal_id is not None) and (x.meal_id == dinner_meal_id):
+            data['dinner'][f'product{i}'] = product_info
+            k += 1
+
+    return Response(data, status=status.HTTP_200_OK) 
 
 @api_view(['DELETE'])
 def api_delete_meal_view(request, meal_id):
@@ -246,20 +286,6 @@ def api_delete_meal_view(request, meal_id):
     else:
         data['failure'] = 'deletion failed'
     return Response(data)
-
-@api_view(['POST'])
-def api_create_meal_view(request):
-
-    #user_id = request.user_id
-    user_id = 1
-
-    meal = Meal()
-
-    serializer = MealSerializer(meal, request.data)
-    if serializer.is_valid():
-        Meal.add_meal(user_id=1, type=serializer.validated_data['type'], date=serializer.validated_data['date'])
-        return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     
 # MEAL ITEM VIEWS
