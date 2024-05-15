@@ -1,12 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.core.validators import ValidationError
 from datetime import date
+from utils.user_utils import gender_validation
 
 class UserProfile(models.Model):
     userprofile_id = models.AutoField(primary_key=True)
     user_id = models.IntegerField(null=True, blank=True)
-    sex = models.CharField(max_length=1, null=False, blank=False)
+    sex = models.CharField(max_length=1, null=False, blank=False, validators=[gender_validation])
     weight = models.FloatField(null=False, blank=False)
     height = models.IntegerField(null=False, blank=False)
     work_type = models.IntegerField(null=False, blank=False)
@@ -42,4 +42,4 @@ class UserProfile(models.Model):
             result -= 200
         elif (user_goal == 1):
             result += 200
-        return result
+        return round(result)

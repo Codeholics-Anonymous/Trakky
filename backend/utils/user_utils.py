@@ -1,7 +1,4 @@
-from rest_framework.response import Response
-from rest_framework import status
-
-# PASSWORD VALIDATION METHOD
+from django.core.exceptions import ValidationError
 
 def password_validation(password):
     # check if password is alphanumeric
@@ -16,3 +13,7 @@ def password_validation(password):
     if not contain_digit:
         return 0
     return 1
+
+def gender_validation(gender):
+    if (gender not in ('M', 'F', 'O')):
+        raise ValidationError("Incorrect gender")
