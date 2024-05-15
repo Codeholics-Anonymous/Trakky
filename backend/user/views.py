@@ -1,14 +1,17 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response 
-
-from .serializers import UserSerializer
 from rest_framework import status
 from rest_framework.authtoken.models import Token
+
 from django.contrib.auth.models import User
-from .models import UserProfile
+from .serializers import UserSerializer, UserProfileSerializer
+from user.models import UserProfile
 
 from products_and_meals.models import Demand
+from products_and_meals.api.serializers import DemandSerializer
 from datetime import date
+
+from utils.products_and_meals_utils import find_basic_demand, basic_macros
 
 # USER AUTHENTICATION
 
@@ -65,11 +68,11 @@ def signup(request):
         sex=userprofile_serializer.validated_data['sex'],
         user_goal=userprofile_serializer.validated_data['user_goal']
         )
-    # approximated amounts of macros
-    # 50/20/30 rule - 50% carbohydrates, 20% protein, 30% fat
-    protein = (0.2*daily_calory_demand) / 4
-    carbohydrates = (0.5*daily_calory_demand) / 4
-    fat = (0.3*daily_calory_demand) / 9
+
+    basic_macros_values = basic_macros(daily_calory_demand)
+    protein = basic_macros_values[0]
+    carbohydrates = basic_macros_values[1]
+    fat = basic_macros_values[2]
     Demand.create_demand(user_id=user.id, date=date.today(), protein=protein, carbohydrates=carbohydrates, fat=fat, daily_calory_demand=daily_calory_demand)
 
     return Response({"token" : token.key, "user" : register_serializer.validated_data, "profile" : userprofile_serializer.validated_data})
@@ -98,9 +101,6 @@ def logout(request):
 
 # USERPROFILE 
 
-from user.models import UserProfile
-from user.serializers import UserProfileSerializer
-
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
@@ -112,8 +112,6 @@ def api_detail_userprofile_view(request):
 
     serializer = UserProfileSerializer(userprofile)
     return Response(serializer.data)
-
-from utils.products_and_meals_utils import find_basic_demand
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])
@@ -127,9 +125,22 @@ def api_update_userprofile_view(request):
     if (UserProfile.update_profile(serializer)):
         # update basic demand if user changed something in profile
         basic_demand = find_basic_demand(request.user.id)
-        basic_demand.daily_calory_demand = UserProfile.calculate_demand(weight=serializer.validated_data['weight'], height=serializer.validated_data['height'], birth_date=serializer.validated_data['birth_date'], work_type=serializer.validated_data['work_type'], sex=serializer.validated_data['sex'], user_goal=serializer.validated_data['user_goal'])
+        # calculate new demand value (new daily_calory_demand)
+        new_demand = UserProfile.calculate_demand(weight=serializer.validated_data['weight'], height=serializer.validated_data['height'], birth_date=serializer.validated_data['birth_date'], work_type=serializer.validated_data['work_type'], sex=serializer.validated_data['sex'], user_goal=serializer.validated_data['user_goal'])
+        # update basic_demand information
+        basic_macros_values = basic_macros(new_demand)
+        basic_demand.daily_calory_demand = new_demand
+        basic_demand.protein = basic_macros_values[0]
+        basic_demand.carbohydrates = basic_macros_values[1]
+        basic_demand.fat = basic_macros_values[2]
+        # save basic_demand changes in database and create serializer to display also data from basic demand
         basic_demand.save()
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+        demand_serializer = DemandSerializer(basic_demand) 
+        data = {
+            'userprofile' : serializer.validated_data,
+            'demand' : demand_serializer.data
+        }
+        return Response(data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
