@@ -6,9 +6,9 @@ from user.models import UserProfile
 
 
 class Macros(models.Model):
-    protein = models.PositiveIntegerField(null=True, blank=True, default=0)
-    carbohydrates = models.PositiveIntegerField(null=True, blank=True, default=0)
-    fat = models.PositiveIntegerField(null=True, blank=True, default=0)
+    protein = models.FloatField(null=True, blank=True, default=0, validators=[MinValueValidator(0)])
+    carbohydrates = models.FloatField(null=True, blank=True, default=0, validators=[MinValueValidator(0)])
+    fat = models.FloatField(null=True, blank=True, default=0, validators=[MinValueValidator(0)])
 
     class Meta:
         abstract = True
@@ -29,7 +29,7 @@ class Product(Macros):
     @property
     def calories_per_hundred_grams(self):
         if (self.protein is not None) and (self.carbohydrates is not None) and (self.fat is not None):
-            return 4 * self.protein + 4 * self.carbohydrates + 9 * self.fat
+            return round(4 * self.protein + 4 * self.carbohydrates + 9 * self.fat)
 
     @classmethod
     def add_product(cls, user_id, name, protein, carbohydrates, fat):
@@ -94,17 +94,17 @@ class Summary(Macros):
     def update_calories(cls, user_id, increase, fat, protein, carbohydrates, date):
         try:
             summary = cls.objects.get(user_id=user_id, date=date)
-            change = (protein * 4) + (carbohydrates * 4) + (fat * 9)
+            change = round((protein * 4) + (carbohydrates * 4) + (fat * 9))
             if increase:
-                summary.daily_calory_intake += change
-                summary.protein += protein
-                summary.carbohydrates += carbohydrates
-                summary.fat += fat
+                summary.daily_calory_intake = round(summary.daily_calory_intake + change, 1)
+                summary.protein = round(summary.protein + protein, 1)
+                summary.carbohydrates = round(summary.carbohydrates + carbohydrates, 1)
+                summary.fat = round(summary.fat + fat, 1)
             else:
-                summary.daily_calory_intake -= change
-                summary.protein -= protein
-                summary.carbohydrates -= carbohydrates
-                summary.fat -= fat
+                summary.daily_calory_intake = round(summary.daily_calory_intake - change, 1)
+                summary.protein = round(summary.protein - protein, 1)
+                summary.carbohydrates = round(summary.carbohydrates - carbohydrates, 1)
+                summary.fat = round(summary.fat - fat, 1)
             summary.save()
             return summary
         except cls.DoesNotExist:
@@ -112,7 +112,7 @@ class Summary(Macros):
 
     @classmethod
     def create_summary(cls, user_id, date, fat=0, protein=0, carbohydrates=0):
-        calories = (protein * 4) + (carbohydrates * 4) + (fat * 9)
+        calories = round((protein * 4) + (carbohydrates * 4) + (fat * 9))
 
         new_summary = cls(
             user_id=user_id,
