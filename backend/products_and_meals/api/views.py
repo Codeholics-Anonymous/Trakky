@@ -153,14 +153,21 @@ def api_detail_summary_view(request, starting_date, ending_date):
 # ways to create demand:
 # 1 option - we are creating demand basing on data that user gave us during registration 
 # 2 option - user can set his demand by himself (by giving us protein, carbohydrates, fat and calories) (this option is presented below)
-#TODO WE HAVE TO KNOW WHAT DEMAND IS USER CURRENTLY USING - BASIC DEMAND OR HIS ACTUAL DEMAND
+
+from utils.products_and_meals_utils import find_basic_demand
+
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def api_detail_demand_view(request, date):
-    demand = Demand.objects.filter(user_id=request.user.id, date__lte=date).order_by('-date').first()
+def api_detail_demand_view(request, date, preference):
+    # check if user want his personal demand or default demand created during registration
+    if preference == 'personal':
+        demand = Demand.objects.filter(user_id=request.user.id, date__lte=date).order_by('-date').first()
+    elif preference == 'default':
+        demand = find_basic_demand(request.user.id)
+
     if demand is None:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return not_found_response()
 
     serializer = DemandSerializer(demand)
     return Response(serializer.data)
@@ -172,10 +179,10 @@ def api_create_demand_view(request):
     user_id = request.user.id
     serializer = DemandSerializer(data=request.data)
 
-    EPSILON = 20 # absolute calorie error
-
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    EPSILON = 20 # absolute calorie error
 
     calories_sum = 4 * serializer.validated_data['protein'] + 4 * serializer.validated_data['carbohydrates'] + 9 * serializer.validated_data['fat']
     if (calories_sum > serializer.validated_data['daily_calory_demand'] + EPSILON):
@@ -185,9 +192,9 @@ def api_create_demand_view(request):
 
     try:
         # we cannot overwrite basic demand created during registration
-        first_user_demand = Demand.objects.filter(user_id=user_id).order_by('demand_id').first()
+        first_user_demand = find_basic_demand(user_id)
         found_demand = Demand.objects.filter(user_id=user_id, date=date.today()).order_by('-demand_id').first()
-        if ((found_demand == first_user_demand) or (found_demand is None)):
+        if ((found_demand == first_user_demand) or (found_demand is None)): # first equation is because we don't want to overwrite basic demand
             raise Demand.DoesNotExist() 
         Demand.update_calories(
             user_id=user_id, 
@@ -209,8 +216,7 @@ def api_create_demand_view(request):
 
 # MEAL VIEWS
 
-# get meal requests returns information about each meal from selected day with all mealitems
-
+# returns information about each meal from selected day with all mealitems included
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_detail_meal_view(request, date):
@@ -252,6 +258,7 @@ def api_detail_meal_view(request, date):
         product = Product.objects.get(product_id=x.product_id) # get product from database
         product_macros_info = Product.calculate_nutrition(gram_amount=x.gram_amount, product=product) # calculate macros per gram_amount
         product_info = {
+            'mealitem_id' : x.meal_item_id,
             'product_id' : product.product_id,
             'name' : product.name,
             'protein' : product_macros_info[0],
@@ -288,12 +295,12 @@ def api_delete_meal_view(request, meal_id):
     return Response(data)
 
     
-# MEAL ITEM VIEWS
+# MEALITEM VIEWS
 
 @api_view(['GET'])
 def api_detail_meal_item_view(request, meal_item_id):
     try:
-        meal_item = MealItem.objects.get(id=meal_item_id)
+        meal_item = MealItem.objects.get(meal_item_id=meal_item_id)
     except MealItem.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -301,18 +308,30 @@ def api_detail_meal_item_view(request, meal_item_id):
     return Response(serializer.data)
 
 @api_view(['PUT'])
+@permission_classes([IsAuthenticated])
 def api_update_meal_item_view(request, meal_item_id):
     try:
-        meal_item = MealItem.objects.get(id=meal_item_id)
+        mealitem = MealItem.objects.get(meal_item_id=meal_item_id)
     except MealItem.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return not_found_response()
     
-    serializer = MealItemSerializer(meal_item, request.data)
-    data = {}
+    serializer = MealItemSerializer(mealitem, request.data)
     if serializer.is_valid():
-        data['success'] = 'update successful'
+        # get product 
+        product = Product.objects.get(product_id=mealitem.product_id)
+        grams_difference = serializer.validated_data['gram_amount'] - mealitem.gram_amount # calculate difference between grams
+        product_macros = Product.calculate_nutrition(gram_amount=abs(grams_difference), product=product) # calculate calories per grams_difference
+        print(grams_difference)
+        # update summary
+        meal_id = mealitem.meal_id # find id of meal this mealitem belongs to
+        summary_date = Meal.objects.get(meal_id=meal_id).date # since we have mealitem, it must exist
+        if grams_difference < 0:
+            new_summary = Summary.update_calories(user_id=request.user.id, increase=0, protein=product_macros[0], carbohydrates=product_macros[1], fat=product_macros[2], date=summary_date)
+        else:
+            new_summary = Summary.update_calories(user_id=request.user.id, increase=1, protein=product_macros[0], carbohydrates=product_macros[1], fat=product_macros[2], date=summary_date)
+        summary_serializer = SummarySerializer(new_summary)
         serializer.save()
-        return Response(data=data)
+        return Response(serializer.validated_data|summary_serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])

@@ -15,7 +15,7 @@ class ProductSerializer(serializers.ModelSerializer):
 class SummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Summary
-        fields = '__all__'
+        exclude = ['summary_id', 'user_id', 'date']
 
 class DemandSerializer(serializers.ModelSerializer):
     protein = serializers.IntegerField(validators=[MaxValueValidator(500), MinValueValidator(0)])

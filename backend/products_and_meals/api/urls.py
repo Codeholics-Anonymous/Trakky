@@ -33,7 +33,7 @@ urlpatterns = [
     #SUMMARY
     path('summary/<str:starting_date>/<str:ending_date>/', api_detail_summary_view, name='summary_detail'),
     #DEMAND
-    path('demand/<str:date>/', api_detail_demand_view, name='demand_detail'),
+    path('demand/<str:date>/<str:preference>/', api_detail_demand_view, name='demand_detail'),
     path('create_demand/', api_create_demand_view, name='demand_create'),
     #MEAL
     path('meal/<str:date>/', api_detail_meal_view, name='meal_detail'),
