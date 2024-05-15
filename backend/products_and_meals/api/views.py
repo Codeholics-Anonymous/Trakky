@@ -274,7 +274,7 @@ def api_detail_meal_view(request, date):
             data['lunch'][f'product{j}'] = product_info
             j += 1
         if (dinner_meal_id is not None) and (x.meal_id == dinner_meal_id):
-            data['dinner'][f'product{i}'] = product_info
+            data['dinner'][f'product{k}'] = product_info
             k += 1
 
     return Response(data, status=status.HTTP_200_OK) 
