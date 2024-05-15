@@ -153,15 +153,22 @@ def api_detail_summary_view(request, starting_date, ending_date):
 # ways to create demand:
 # 1 option - we are creating demand basing on data that user gave us during registration 
 # 2 option - user can set his demand by himself (by giving us protein, carbohydrates, fat and calories) (this option is presented below)
-#TODO WE HAVE TO KNOW WHAT DEMAND IS USER CURRENTLY USING - BASIC DEMAND OR HIS ACTUAL DEMAND
+
+from utils.products_and_meals_utils import find_basic_demand
+
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def api_detail_demand_view(request, date):
-    demand = Demand.objects.filter(user_id=request.user.id, date__lte=date).order_by('-date').first()
-    if demand is None:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+def api_detail_demand_view(request, date, preference):
+    # check if user want his personal demand or default demand created during registration
+    if preference == 'personal':
+        demand = Demand.objects.filter(user_id=request.user.id, date__lte=date).order_by('-date').first()
+    elif preference == 'default':
+        demand = find_basic_demand(request.user.id)
 
+    if demand is None:
+        return not_found_response()
+    
     serializer = DemandSerializer(demand)
     return Response(serializer.data)
 
@@ -172,10 +179,10 @@ def api_create_demand_view(request):
     user_id = request.user.id
     serializer = DemandSerializer(data=request.data)
 
-    EPSILON = 20 # absolute calorie error
-
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    EPSILON = 20 # absolute calorie error
 
     calories_sum = 4 * serializer.validated_data['protein'] + 4 * serializer.validated_data['carbohydrates'] + 9 * serializer.validated_data['fat']
     if (calories_sum > serializer.validated_data['daily_calory_demand'] + EPSILON):
