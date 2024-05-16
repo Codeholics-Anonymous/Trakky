@@ -114,6 +114,7 @@ def api_detail_userprofile_view(request):
     return Response(serializer.data)
 
 @api_view(['PUT'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_update_userprofile_view(request):
     try:
