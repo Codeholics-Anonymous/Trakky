@@ -9,6 +9,7 @@ from products_and_meals.api.views import (
                 api_detail_summary_view,
                 #DEMAND
                 api_detail_demand_view,
+                api_detail_basic_demand_view,
                 api_create_demand_view,
                 #MEAL
                 api_detail_meal_view,
@@ -33,6 +34,7 @@ urlpatterns = [
     #SUMMARY
     path('summary/<str:starting_date>/<str:ending_date>/', api_detail_summary_view, name='summary_detail'),
     #DEMAND
+    path('basic_demand/', api_detail_basic_demand_view),
     path('demand/<str:starting_date>/<str:ending_date>/', api_detail_demand_view, name='demand_detail'),
     path('create_demand/', api_create_demand_view, name='demand_create'),
     #MEAL

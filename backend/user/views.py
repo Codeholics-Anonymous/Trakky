@@ -53,22 +53,23 @@ def signup(request):
 
     # USERPROFILE PART
     if (userprofile_serializer.is_valid()):
+        # check what is daily_calory_demand basing on info given by user
+        daily_calory_demand = UserProfile.calculate_demand(
+            weight=userprofile_serializer.validated_data['weight'],
+            height=userprofile_serializer.validated_data['height'],
+            birth_date=userprofile_serializer.validated_data['birth_date'],
+            work_type=userprofile_serializer.validated_data['work_type'],
+            sex=userprofile_serializer.validated_data['sex'],
+            user_goal=userprofile_serializer.validated_data['user_goal']
+            )
         userprofile_serializer.validated_data['user_id'] = user.id
+        userprofile_serializer.validated_data['daily_calory_demand'] = daily_calory_demand
         userprofile_serializer.save()
     else:
         user.delete() # if userprofile information weren't valid, we have to delete user
         return Response(userprofile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # DEMAND PART BASED ON USERPROFILE INFO
-    daily_calory_demand = UserProfile.calculate_demand(
-        weight=userprofile_serializer.validated_data['weight'],
-        height=userprofile_serializer.validated_data['height'],
-        birth_date=userprofile_serializer.validated_data['birth_date'],
-        work_type=userprofile_serializer.validated_data['work_type'],
-        sex=userprofile_serializer.validated_data['sex'],
-        user_goal=userprofile_serializer.validated_data['user_goal']
-        )
-
     basic_macros_values = basic_macros(daily_calory_demand)
     protein = basic_macros_values[0]
     carbohydrates = basic_macros_values[1]

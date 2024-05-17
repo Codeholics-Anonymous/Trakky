@@ -215,6 +215,23 @@ def api_detail_demand_view(request, starting_date, ending_date):
         'demand_fat_sum' : demand_fat_sum
         }, status=status.HTTP_200_OK)
 
+from user.models import UserProfile
+from utils.products_and_meals_utils import basic_macros
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_detail_basic_demand_view(request):
+    user_basic_demand = UserProfile.objects.get(user_id=request.user.id).daily_calory_demand
+    user_basic_macros = basic_macros(user_basic_demand)
+    data = {
+        'demand' : user_basic_demand,
+        'protein' : user_basic_macros[0],
+        'carbohydrates' : user_basic_macros[1],
+        'fat' : user_basic_macros[2]
+    }
+    return Response(data, status=status.HTTP_200_OK)
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
