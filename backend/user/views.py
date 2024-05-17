@@ -99,7 +99,7 @@ def logout(request):
     except Token.DoesNotExist:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-# USERPROFILE 
+# USERPROFILE VIEWS
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
