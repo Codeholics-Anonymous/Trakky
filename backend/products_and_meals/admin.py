@@ -7,11 +7,11 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Demand)
 class DemandAdmin(admin.ModelAdmin):
-    list_display = ('demand_id', 'user_id', 'date', 'protein', 'carbohydrates', 'fat','daily_calory_demand')
+    list_display = ('demand_id', 'userprofile_id', 'date', 'protein', 'carbohydrates', 'fat','daily_calory_demand')
 
 @admin.register(Summary)
 class SummaryAdmin(admin.ModelAdmin):
-    list_display = ('summary_id', 'user_id', 'date', 'daily_calory_intake', 'protein', 'carbohydrates', 'fat')
+    list_display = ('summary_id', 'userprofile_id', 'date', 'daily_calory_intake', 'protein', 'carbohydrates', 'fat')
 
 @admin.register(Meal)
 class MealAdmin(admin.ModelAdmin):

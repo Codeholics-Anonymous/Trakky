@@ -7,7 +7,7 @@ from django.core.validators import MaxValueValidator
 
 class UserProfile(models.Model):
     userprofile_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField(null=True, blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     sex = models.CharField(max_length=1, null=False, blank=False, validators=[gender_validation])
     weight = models.FloatField(null=False, blank=False, validators=[MaxValueValidator(635)])
     height = models.IntegerField(null=False, blank=False, validators=[MaxValueValidator(272)])

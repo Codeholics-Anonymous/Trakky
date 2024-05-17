@@ -3,17 +3,16 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.response import Response
 from utils.responses import custom_response, not_found_response
-from rest_framework.decorators import api_view
 
 from products_and_meals.models import (Product, Summary, Demand, Meal, MealItem)
 from products_and_meals.api.serializers import (ProductSerializer, SummarySerializer, DemandSerializer, MealSerializer, MealItemSerializer)
 from datetime import datetime, date
 
-from rest_framework.decorators import authentication_classes, permission_classes
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from django.db.models import Q # to make more complex queries in db
+from django.db.models import Q
 
 # PRODUCT VIEWS
 
@@ -23,11 +22,8 @@ from utils.products_and_meals_utils import above_upper_limit
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_detail_product_view(request, product_name):
-    try:
-        product = Product.objects.filter(Q(name__icontains=product_name) & (Q(user_id=1) | Q(user_id=request.user.id)))
-        if (len(product) == 0):
-            raise Product.DoesNotExist
-    except Product.DoesNotExist:
+    product = Product.objects.filter(Q(name__icontains=product_name) & (Q(user_id__isnull=True) | Q(user_id=request.user.id)))
+    if (len(product) == 0):
         return not_found_response()
 
     serializer = ProductSerializer(product, many=True)
@@ -49,6 +45,8 @@ def api_update_product_view(request, product_id):
 
     serializer = ProductSerializer(data=request.data)
     if serializer.is_valid():
+        # find userprofile to update summary later
+        userprofile_id = UserProfile.objects.get(user_id=request.user.id).userprofile_id
         # check if sum of macros isn't larger than 100g
         if above_upper_limit(serializer.validated_data['protein'], serializer.validated_data['carbohydrates'], serializer.validated_data['fat'], limit=100):
             return custom_response("Macros", f"amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100})", status.HTTP_400_BAD_REQUEST) 
@@ -64,7 +62,7 @@ def api_update_product_view(request, product_id):
             all_product_macros = Product.calculate_nutrition(gram_amount=mealitems_gram_amount, product=product)
             # subtract calories, because past macros and calories of product aren't current
             Summary.update_calories( 
-                user_id=request.user.id, 
+                userprofile_id=userprofile_id, 
                 increase=0, 
                 protein=all_product_macros[0], 
                 carbohydrates=all_product_macros[1], 
@@ -82,7 +80,7 @@ def api_update_product_view(request, product_id):
         # after product update, we have to increase number of calories and macros in summary
         all_updated_product_macros = Product.calculate_nutrition(gram_amount=mealitems_gram_amount, product=updated_product)
         Summary.update_calories(
-            user_id=request.user.id, 
+            userprofile_id=userprofile_id, 
             increase=1, 
             protein=all_updated_product_macros[0],
             carbohydrates=all_updated_product_macros[1],
@@ -135,7 +133,8 @@ def api_create_product_view(request):
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_detail_summary_view(request, starting_date, ending_date):
-    summaries = Summary.objects.filter(user_id=request.user.id, date__range=(starting_date, ending_date))
+    userprofile_id = UserProfile.objects.get(user_id=request.user.id).userprofile_id
+    summaries = Summary.objects.filter(userprofile_id=userprofile_id, date__range=(starting_date, ending_date))
 
     d_start = datetime.strptime(starting_date, "%Y-%m-%d")
     d_end = datetime.strptime(ending_date, "%Y-%m-%d")
@@ -167,14 +166,15 @@ from utils.date import calculate_days_difference, date_validation
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_detail_demand_view(request, starting_date, ending_date):
+    userprofile_id = UserProfile.objects.get(user_id=user_id).userprofile_id
     date_validation(starting_date, ending_date)
     # check first demand existence
     beginning_demand = None
-    beginning_demand = Demand.objects.filter(user_id=request.user.id, date__lte=starting_date).order_by('-date').first()
+    beginning_demand = Demand.objects.filter(userprofile_id=userprofile_id, date__lte=starting_date).order_by('-date').first()
     if beginning_demand is None:
         return custom_response("No information", "about demand for the selected period", status.HTTP_404_NOT_FOUND)
     # find all demands
-    other_demands = Demand.objects.filter(user_id=request.user.id, date__gt=starting_date, date__lte=ending_date)
+    other_demands = Demand.objects.filter(userprofile_id=userprofile_id, date__gt=starting_date, date__lte=ending_date)
     all_demands = [beginning_demand,] + [_ for _ in other_demands]
     # calculate calories, protein, carbohydrates and fat sum
     demand_calories_sum = 0
@@ -215,11 +215,29 @@ def api_detail_demand_view(request, starting_date, ending_date):
         'demand_fat_sum' : demand_fat_sum
         }, status=status.HTTP_200_OK)
 
+from user.models import UserProfile
+from utils.products_and_meals_utils import basic_macros
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_detail_basic_demand_view(request):
+    user_basic_demand = UserProfile.objects.get(user_id=request.user.id).daily_calory_demand
+    user_basic_macros = basic_macros(user_basic_demand)
+    data = {
+        'demand' : user_basic_demand,
+        'protein' : user_basic_macros[0],
+        'carbohydrates' : user_basic_macros[1],
+        'fat' : user_basic_macros[2]
+    }
+    return Response(data, status=status.HTTP_200_OK)
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_create_demand_view(request):
     user_id = request.user.id
+    userprofile_id = UserProfile.objects.get(user_id=user_id).userprofile_id
     serializer = DemandSerializer(data=request.data)
 
     if not serializer.is_valid():
@@ -235,16 +253,16 @@ def api_create_demand_view(request):
     
     # try to get demand from today, if exists - update it, if not create demand with date = today
     try:
-        Demand.objects.get(user_id=user_id, date=date.today())
+        Demand.objects.get(userprofile_id=userprofile_id, date=date.today())
         Demand.update_calories(
-            user_id=user_id, 
+            userprofile_id=userprofile_id, 
             protein=serializer.validated_data['protein'],
             carbohydrates=serializer.validated_data['carbohydrates'],
             fat=serializer.validated_data['fat'],
             daily_calory_demand=serializer.validated_data['daily_calory_demand'])
     except Demand.DoesNotExist:
         Demand.create_demand(
-            user_id=user_id,
+            userprofile_id=userprofile_id,
             protein=serializer.validated_data['protein'],
             carbohydrates=serializer.validated_data['carbohydrates'],
             fat=serializer.validated_data['fat'],
@@ -318,22 +336,6 @@ def api_detail_meal_view(request, date):
             k += 1
 
     return Response(data, status=status.HTTP_200_OK) 
-
-@api_view(['DELETE'])
-def api_delete_meal_view(request, meal_id):
-    try:
-        meal = Meal.objects.get(meal_id=meal_id)
-    except Meal.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    operation = Meal.objects.get(meal_id=meal_id).delete()
-    data = {}
-    if operation:
-        data['success'] = 'deletion successful'
-    else:
-        data['failure'] = 'deletion failed'
-    return Response(data)
-
     
 # MEALITEM VIEWS
 
@@ -351,6 +353,7 @@ def api_detail_meal_item_view(request, meal_item_id):
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_update_meal_item_view(request, meal_item_id):
+    userprofile_id = UserProfile.objects.get(user_id=request.user.id).userprofile_id
     try:
         mealitem = MealItem.objects.get(meal_item_id=meal_item_id)
     except MealItem.DoesNotExist:
@@ -362,14 +365,13 @@ def api_update_meal_item_view(request, meal_item_id):
         product = Product.objects.get(product_id=mealitem.product_id)
         grams_difference = serializer.validated_data['gram_amount'] - mealitem.gram_amount # calculate difference between grams
         product_macros = Product.calculate_nutrition(gram_amount=abs(grams_difference), product=product) # calculate calories per grams_difference
-        print(grams_difference)
         # update summary
         meal_id = mealitem.meal_id # find id of meal this mealitem belongs to
         summary_date = Meal.objects.get(meal_id=meal_id).date # since we have mealitem, it must exist
         if grams_difference < 0:
-            new_summary = Summary.update_calories(user_id=request.user.id, increase=0, protein=product_macros[0], carbohydrates=product_macros[1], fat=product_macros[2], date=summary_date)
+            new_summary = Summary.update_calories(userprofile_id=userprofile_id, increase=0, protein=product_macros[0], carbohydrates=product_macros[1], fat=product_macros[2], date=summary_date)
         else:
-            new_summary = Summary.update_calories(user_id=request.user.id, increase=1, protein=product_macros[0], carbohydrates=product_macros[1], fat=product_macros[2], date=summary_date)
+            new_summary = Summary.update_calories(userprofile_id=userprofile_id, increase=1, protein=product_macros[0], carbohydrates=product_macros[1], fat=product_macros[2], date=summary_date)
         summary_serializer = SummarySerializer(new_summary)
         serializer.save()
         return Response(serializer.validated_data|summary_serializer.data, status=status.HTTP_200_OK)
@@ -391,6 +393,7 @@ def api_delete_meal_item_view(request, meal_item_id):
     return Response(data=data)
 
 def create_mealitem(type, user_id, request_data, date):
+    userprofile_id = UserProfile.objects.get(user_id=user_id).userprofile_id
     serializer = MealItemSerializer(data=request_data)
     if serializer.is_valid():
         # PRODUCT EXISTENCE
@@ -402,15 +405,15 @@ def create_mealitem(type, user_id, request_data, date):
         if not Meal.objects.filter(user_id=user_id, date=date, type=type).exists():
             Meal.add_meal(user_id=user_id, type=type, date=date)
         # SUMMARY EXISTENCE
-        if not Summary.objects.filter(user_id=user_id, date=date).exists():
-            Summary.create_summary(user_id=user_id, date=date)
+        if not Summary.objects.filter(userprofile_id=userprofile_id, date=date).exists():
+            Summary.create_summary(userprofile_id=userprofile_id, date=date)
         # MEAL ITEM PART
         meal_id = Meal.objects.get(user_id=user_id, date=date, type=type).meal_id # now we can get meal_id because we know that meal exists
         MealItem.add_product(meal_id=meal_id, product_id=product_to_add.product_id, gram_amount=serializer.validated_data['gram_amount'])
         # calculate product macros and calories (gram_amount of product can be different than 100)
         protein, carbohydrates, fat = Product.calculate_nutrition(gram_amount=serializer.validated_data['gram_amount'], product=product_to_add)
         # update summary
-        Summary.update_calories(user_id=user_id, increase=True, protein=protein, carbohydrates=carbohydrates, fat=fat, date=date)
+        Summary.update_calories(userprofile_id=userprofile_id, increase=True, protein=protein, carbohydrates=carbohydrates, fat=fat, date=date)
         # create data to return
         data = serializer.validated_data|{'name' : product_to_add.name, 'calories' : round((4*protein + 4*carbohydrates + 9*fat)), 'protein' : round(protein, 1), 'carbohydrates' : round(carbohydrates, 1), 'fat' : round(fat, 1)}
         return Response(data, status=status.HTTP_201_CREATED)
