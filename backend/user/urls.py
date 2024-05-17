@@ -1,10 +1,9 @@
 from django.urls import path
-from user.views import (api_update_userprofile_view, api_detail_userprofile_view, api_delete_userprofile_view)
+from user.views import (api_update_userprofile_view, api_detail_userprofile_view)
 
 app_name = 'user'
 
 urlpatterns = [
     path('userprofile/', api_detail_userprofile_view, name='userprofile_detail'),
-    path('userprofile/update/', api_update_userprofile_view, name='userprofile_update'),
-    path('userprofile/delete/<int:userprofile_id>/', api_delete_userprofile_view, name='userprofile_delete')
+    path('userprofile/update/', api_update_userprofile_view, name='userprofile_update')
 ]

@@ -392,8 +392,14 @@ def api_delete_meal_item_view(request, meal_item_id):
         data['failure'] = 'deletion failed'
     return Response(data=data)
 
+from utils.products_and_meals_utils import find_first_demand
+
 def create_mealitem(type, user_id, request_data, date):
     userprofile_id = UserProfile.objects.get(user_id=user_id).userprofile_id
+    # check if date isn't earlier than date of account creation
+    account_creation_date = find_first_demand(userprofile_id).date
+    if account_creation_date > datetime.strptime(date, "%Y-%m-%d").date():
+        return custom_response("Date", "earlier than account creation", status.HTTP_400_BAD_REQUEST)    
     serializer = MealItemSerializer(data=request_data)
     if serializer.is_valid():
         # PRODUCT EXISTENCE

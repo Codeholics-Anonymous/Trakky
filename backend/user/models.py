@@ -19,6 +19,15 @@ class UserProfile(models.Model):
     @classmethod
     def update_profile(cls, serializer):
         if serializer.is_valid():
+            new_demand = cls.calculate_demand(
+                weight=serializer.validated_data['weight'],
+                height=serializer.validated_data['height'],
+                birth_date=serializer.validated_data['birth_date'],
+                work_type=serializer.validated_data['work_type'],
+                sex=serializer.validated_data['sex'],
+                user_goal=serializer.validated_data['user_goal']
+                )
+            serializer.validated_data['daily_calory_demand'] = new_demand
             serializer.save()
             return True
         else:
