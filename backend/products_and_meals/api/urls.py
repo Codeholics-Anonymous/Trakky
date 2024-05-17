@@ -13,7 +13,6 @@ from products_and_meals.api.views import (
                 api_create_demand_view,
                 #MEAL
                 api_detail_meal_view,
-                api_delete_meal_view,
                 #MEAL ITEM
                 api_detail_meal_item_view,
                 api_update_meal_item_view,
@@ -39,7 +38,6 @@ urlpatterns = [
     path('create_demand/', api_create_demand_view, name='demand_create'),
     #MEAL
     path('meal/<str:date>/', api_detail_meal_view, name='meal_detail'),
-    path('meal/<int:meal_id>/delete/', api_delete_meal_view, name='meal_delete'),
     #MEAL ITEM
     path('mealitem/<int:meal_item_id>/', api_detail_meal_item_view, name='meal_item_detail'),
     path('mealitem/<int:meal_item_id>/update/', api_update_meal_item_view, name='meal_item_update'),
