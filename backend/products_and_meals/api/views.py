@@ -161,23 +161,59 @@ def api_detail_summary_view(request, starting_date, ending_date):
 # 1 option - we are creating demand basing on data that user gave us during registration 
 # 2 option - user can set his demand by himself (by giving us protein, carbohydrates, fat and calories) (this option is presented below)
 
-from utils.products_and_meals_utils import find_basic_demand
+from utils.date import calculate_days_difference, date_validation
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def api_detail_demand_view(request, date, preference):
-    # check if user want his personal demand or default demand created during registration
-    if preference == 'personal':
-        demand = Demand.objects.filter(user_id=request.user.id, date__lte=date).order_by('-date').first()
-    elif preference == 'default':
-        demand = find_basic_demand(request.user.id)
+def api_detail_demand_view(request, starting_date, ending_date):
+    date_validation(starting_date, ending_date)
+    # check first demand existence
+    beginning_demand = None
+    beginning_demand = Demand.objects.filter(user_id=request.user.id, date__lte=starting_date).order_by('-date').first()
+    if beginning_demand is None:
+        return custom_response("No information", "about demand for the selected period", status.HTTP_404_NOT_FOUND)
+    # find all demands
+    other_demands = Demand.objects.filter(user_id=request.user.id, date__gt=starting_date, date__lte=ending_date)
+    all_demands = [beginning_demand,] + [_ for _ in other_demands]
+    # calculate calories, protein, carbohydrates and fat sum
+    demand_calories_sum = 0
+    demand_protein_sum = 0
+    demand_carbohydrates_sum = 0
+    demand_fat_sum = 0
+    if (len(all_demands) == 1): # case when starting_date and ending_date are all in one demand
+        days_difference = calculate_days_difference(starting_date, ending_date)
+        demand_calories_sum = days_difference*all_demands[0].daily_calory_demand
+        demand_protein_sum = days_difference*all_demands[0].protein
+        demand_carbohydrates_sum = days_difference*all_demands[0].carbohydrates
+        demand_fat_sum = days_difference*all_demands[0].fat
+    else: # we have to check more than one demand
+        # firstly - calculate from starting date to date of second demand
+        days_difference = calculate_days_difference(starting_date, all_demands[1].date) - 1
+        demand_calories_sum += days_difference*all_demands[0].daily_calory_demand
+        demand_protein_sum += days_difference*all_demands[0].protein
+        demand_carbohydrates_sum += days_difference*all_demands[0].carbohydrates
+        demand_fat_sum += days_difference*all_demands[0].fat
+        # now - calculate indirect demands between starting and ending date
+        for i in range(1, len(all_demands) - 1):
+            days_difference = calculate_days_difference(all_demands[i].date, all_demands[i+1].date) - 1
+            demand_calories_sum += days_difference*all_demands[i].daily_calory_demand
+            demand_protein_sum += days_difference*all_demands[i].protein
+            demand_carbohydrates_sum += days_difference*all_demands[i].carbohydrates
+            demand_fat_sum += days_difference*all_demands[i].fat
+        # lastly - calculate demand from date of last demand up to ending_date
+        days_difference = calculate_days_difference(all_demands[len(all_demands) - 1].date, ending_date)
+        demand_calories_sum += days_difference*all_demands[len(all_demands) - 1].daily_calory_demand
+        demand_protein_sum += days_difference*all_demands[len(all_demands) - 1].protein
+        demand_carbohydrates_sum += days_difference*all_demands[len(all_demands) - 1].carbohydrates
+        demand_fat_sum += days_difference*all_demands[len(all_demands) - 1].fat
 
-    if demand is None:
-        return not_found_response()
-
-    serializer = DemandSerializer(demand)
-    return Response(serializer.data)
+    return Response({
+        'demand_calories_sum' : demand_calories_sum, 
+        'demand_protein_sum' : demand_protein_sum, 
+        'demand_carbohydrates_sum' : demand_carbohydrates_sum, 
+        'demand_fat_sum' : demand_fat_sum
+        }, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
@@ -193,16 +229,13 @@ def api_create_demand_view(request):
 
     calories_sum = round(4 * serializer.validated_data['protein'] + 4 * serializer.validated_data['carbohydrates'] + 9 * serializer.validated_data['fat'])
     if (calories_sum > serializer.validated_data['daily_calory_demand'] + EPSILON):
-        return Response({'Macros calories too high' : f'{calories_sum}'})
+        return Response({'Macros calories too high' : f'{calories_sum}/{serializer.validated_data["daily_calory_demand"]}'})
     elif (calories_sum < serializer.validated_data['daily_calory_demand'] - EPSILON):
-        return Response({'Macros calories too low' : f'{calories_sum}'})
-
+        return Response({'Macros calories too low' : f'{calories_sum}/{serializer.validated_data["daily_calory_demand"]}'})
+    
+    # try to get demand from today, if exists - update it, if not create demand with date = today
     try:
-        # we cannot overwrite basic demand created during registration
-        basic_demand = find_basic_demand(user_id)
-        personal_demand = Demand.objects.filter(user_id=user_id, date=date.today()).order_by('-demand_id').first() # look for demand from current day
-        if ((personal_demand == basic_demand) or (personal_demand is None)): # to prevent overwriting basic_demand
-            raise Demand.DoesNotExist() 
+        Demand.objects.get(user_id=user_id, date=date.today())
         Demand.update_calories(
             user_id=user_id, 
             protein=serializer.validated_data['protein'],
