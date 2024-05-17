@@ -10,4 +10,4 @@ class UserSerializer(serializers.ModelSerializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile 
-        exclude = ['userprofile_id']
+        exclude = ['userprofile_id', 'daily_calory_demand']

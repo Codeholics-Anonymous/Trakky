@@ -99,7 +99,7 @@ def logout(request):
     except Token.DoesNotExist:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-# USERPROFILE 
+# USERPROFILE VIEWS
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
@@ -114,6 +114,7 @@ def api_detail_userprofile_view(request):
     return Response(serializer.data)
 
 @api_view(['PUT'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_update_userprofile_view(request):
     try:

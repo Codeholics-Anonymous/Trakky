@@ -2,15 +2,17 @@ from django.db import models
 from django.contrib.auth.models import User
 from datetime import date
 from utils.user_utils import gender_validation
+from utils.date import date_validation, age_validation
+from django.core.validators import MaxValueValidator
 
 class UserProfile(models.Model):
     userprofile_id = models.AutoField(primary_key=True)
     user_id = models.IntegerField(null=True, blank=True)
     sex = models.CharField(max_length=1, null=False, blank=False, validators=[gender_validation])
-    weight = models.FloatField(null=False, blank=False)
-    height = models.IntegerField(null=False, blank=False)
+    weight = models.FloatField(null=False, blank=False, validators=[MaxValueValidator(635)])
+    height = models.IntegerField(null=False, blank=False, validators=[MaxValueValidator(272)])
     work_type = models.IntegerField(null=False, blank=False)
-    birth_date = models.DateField(null=False, blank=False)
+    birth_date = models.DateField(null=False, blank=False, validators=[date_validation, age_validation])
     daily_calory_demand = models.IntegerField(null=True, blank=True)
     user_goal = models.IntegerField(null=False, blank=False)
 
