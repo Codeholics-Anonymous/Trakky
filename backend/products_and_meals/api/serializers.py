@@ -10,7 +10,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        exclude = ['user_id']
+        exclude = ['user']
 
 class SummarySerializer(serializers.ModelSerializer):
     class Meta:

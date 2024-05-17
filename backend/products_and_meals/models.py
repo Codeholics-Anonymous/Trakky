@@ -23,7 +23,7 @@ class Macros(models.Model):
 
 class Product(Macros):
     product_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField(blank=True, null=True) # foreign key to user_id at django User class
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(max_length=250, blank=False, null=False)
 
     @property
