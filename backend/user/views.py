@@ -11,7 +11,7 @@ from products_and_meals.models import Demand
 from products_and_meals.api.serializers import DemandSerializer
 from datetime import date
 
-from utils.products_and_meals_utils import find_basic_demand, basic_macros
+from utils.products_and_meals_utils import find_first_demand, basic_macros
 
 # USER AUTHENTICATION
 
@@ -108,8 +108,18 @@ def logout(request):
     except Token.DoesNotExist:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
+from utils.responses import custom_response
+
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_delete_user_view(request):
+    if (request.user.delete()):
+        return custom_response("Account", "deleted")
+    else:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
 # USERPROFILE VIEWS
-# TODO - WHEN UPDATING USERPROFILE - DON'T UPDATE BASIC_DEMAND BECAUSE NOW IT IS NOT ACTUAL!
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
@@ -134,37 +144,5 @@ def api_update_userprofile_view(request):
 
     serializer = UserProfileSerializer(userprofile, request.data)
     if (UserProfile.update_profile(serializer)):
-        # update basic demand if user changed something in profile
-        basic_demand = find_basic_demand(request.user.id)
-        # calculate new demand value (new daily_calory_demand)
-        new_demand = UserProfile.calculate_demand(weight=serializer.validated_data['weight'], height=serializer.validated_data['height'], birth_date=serializer.validated_data['birth_date'], work_type=serializer.validated_data['work_type'], sex=serializer.validated_data['sex'], user_goal=serializer.validated_data['user_goal'])
-        # update basic_demand information
-        basic_macros_values = basic_macros(new_demand)
-        basic_demand.daily_calory_demand = new_demand
-        basic_demand.protein = basic_macros_values[0]
-        basic_demand.carbohydrates = basic_macros_values[1]
-        basic_demand.fat = basic_macros_values[2]
-        # save basic_demand changes in database and create serializer to display also data from basic demand
-        basic_demand.save()
-        demand_serializer = DemandSerializer(basic_demand) 
-        data = {
-            'userprofile' : serializer.validated_data,
-            'demand' : demand_serializer.data
-        }
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['DELETE'])
-def api_delete_userprofile_view(request, userprofile_id):
-    try:
-        userprofile = UserProfile.objects.get(userprofile_id=userprofile_id)
-    except UserProfile.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    operation = userprofile.delete()
-    data = {}
-    if operation:
-        data['success'] = "deletion successful"
-    else:
-        data['failure'] = 'deletion failed'
-    return Response(data)
