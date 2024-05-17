@@ -103,29 +103,24 @@ def api_delete_product_view(request, product_id):
     else:
         return custom_response("Failure", "deletion failed", status.HTTP_400_BAD_REQUEST)
 
+from utils.products_and_meals_utils import add_product
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_create_product_view(request):
-    serializer = ProductSerializer(data=request.data)
-    if serializer.is_valid():
-        # check if this product exists in database
-        if Product.objects.filter(name=serializer.validated_data['name']).exists():
-            return custom_response("Product", "already exists")
-        # check if sum of macros amount isn't larger than 100g
-        if above_upper_limit(serializer.validated_data['protein'], serializer.validated_data['carbohydrates'], serializer.validated_data['fat'], limit=100):
-            return custom_response("Macros", f"amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100})", status.HTTP_400_BAD_REQUEST)
-        # add product
-        added_product = Product.add_product(
-            user_id=request.user.id,
-            name=serializer.validated_data['name'],
-            protein=serializer.validated_data['protein'],
-            carbohydrates=serializer.validated_data['carbohydrates'],
-            fat=serializer.validated_data['fat'],
-        )
-        data = serializer.validated_data|{'calories_per_hundred_grams' : added_product.calories_per_hundred_grams}
-        return Response(data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return add_product(request_data=request.data, user_id=request.user.id)
+
+# VIEW TO ADD PRODUCT FOR ALL USERS (AVAILABLE ONLY FOR PRODUCT MANAGERS)
+
+from utils.permissions import IsProductManager
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsProductManager])
+def api_create_product_for_all_view(request):
+    return add_product(request_data=request.data, user_id=None)
+
 
 # SUMMARY VIEWS
 
