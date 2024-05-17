@@ -40,13 +40,19 @@ def signup(request):
     
     # REGISTER PART
     if register_serializer.is_valid():
+        # check if password satisfies validation
         if (not password_validation(register_data['password'])):
             return Response({"Password incorrect" : "Please check conditions below", 1 : "Only letters and digits are allowed", 2 : "At least 8 characters", 3 : "Contains at least one digit", 4 : "Contains at least one letter"})
-        register_serializer.save()
-        user = User.objects.get(username=register_data['username'])
+
+        # create and save user instance
+        user = register_serializer.save()
+
+        # hash user password
         user.set_password(register_data['password'])
         user.save()
         register_serializer.validated_data['password'] = user.password
+
+        # generate user token
         token = Token.objects.create(user=user)
     else:
         return Response(register_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -62,9 +68,11 @@ def signup(request):
             sex=userprofile_serializer.validated_data['sex'],
             user_goal=userprofile_serializer.validated_data['user_goal']
             )
-        userprofile_serializer.validated_data['user_id'] = user.id
-        userprofile_serializer.validated_data['daily_calory_demand'] = daily_calory_demand
-        userprofile_serializer.save()
+        userprofile = UserProfile.objects.create(
+            user=user,
+            daily_calory_demand = daily_calory_demand,
+            **userprofile_serializer.validated_data # unpack dictionary as keyword args
+        )
     else:
         user.delete() # if userprofile information weren't valid, we have to delete user
         return Response(userprofile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -74,8 +82,8 @@ def signup(request):
     protein = basic_macros_values[0]
     carbohydrates = basic_macros_values[1]
     fat = basic_macros_values[2]
-    Demand.create_demand(user_id=user.id, date=date.today(), protein=protein, carbohydrates=carbohydrates, fat=fat, daily_calory_demand=daily_calory_demand)
-
+    Demand.create_demand(userprofile_id=userprofile.userprofile_id, date=date.today(), protein=protein, carbohydrates=carbohydrates, fat=fat, daily_calory_demand=daily_calory_demand)
+ 
     return Response({"token" : token.key, "user" : register_serializer.validated_data, "profile" : userprofile_serializer.validated_data})
 
 from rest_framework.decorators import authentication_classes, permission_classes
@@ -101,6 +109,7 @@ def logout(request):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 # USERPROFILE VIEWS
+# TODO - WHEN UPDATING USERPROFILE - DON'T UPDATE BASIC_DEMAND BECAUSE NOW IT IS NOT ACTUAL!
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
