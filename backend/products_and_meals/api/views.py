@@ -184,7 +184,7 @@ def add_product(request_data, user_id):
             return short_response("message", "Product already exists.", status.HTTP_400_BAD_REQUEST)
         # check if sum of macros isn't larger than 100g
         if above_upper_limit(serializer.validated_data['protein'], serializer.validated_data['carbohydrates'], serializer.validated_data['fat'], limit=100):
-            return short_response("message", f"Macros amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100})", status.HTTP_400_BAD_REQUEST)
+            return short_response("message", f"Macros amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100.0})", status.HTTP_400_BAD_REQUEST)
         # add product
         added_product = Product.add_product(
             user_id=user_id,
@@ -464,17 +464,14 @@ def api_update_meal_item_view(request, meal_item_id):
 @api_view(['DELETE'])
 def api_delete_meal_item_view(request, meal_item_id):
     try:
-        meal_item = MealItem.objects.get(id=meal_item_id)
+        meal_item = MealItem.objects.get(meal_item_id=meal_item_id)
     except MealItem.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return not_found_response()
 
-    operation = MealItem.objects.get(id=meal_item_id).delete()
-    data = {}
-    if operation:
-        data['success'] = 'deletion successful'
+    if MealItem.remove_product(id=meal_item.meal_item_id):
+        return short_response("message", "Deletion successful")
     else:
-        data['failure'] = 'deletion failed'
-    return Response(data=data)
+        return short_response("message", "Deletion failed", status.HTTP_400_BAD_REQUEST)
 
 from utils.products_and_meals_utils import find_first_demand
 
@@ -490,7 +487,7 @@ def create_mealitem(type, user_id, request_data, date):
         try:
             product_to_add = Product.objects.get(Q(product_id=serializer.validated_data['product_id']) & (Q(user_id=user_id) | Q(user_id__isnull=True))) # check if this product should be available for user
         except Product.DoesNotExist:
-            return short_response("Product", "does not exist", status.HTTP_404_NOT_FOUND)
+            return short_response("message", "Product does not exist", status.HTTP_404_NOT_FOUND)
         # MEAL EXISTENCE
         if not Meal.objects.filter(user_id=user_id, date=date, type=type).exists():
             Meal.add_meal(user_id=user_id, type=type, date=date)

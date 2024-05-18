@@ -42,7 +42,7 @@ def signup(request):
     if register_serializer.is_valid():
         # check if password satisfies validation
         if (not password_validation(register_data['password'])):
-            return Response({"message" : "Password incorrect. Please check conditions below.", 1 : "Only letters and digits are allowed", 2 : "At least 8 characters", 3 : "Contains at least one digit", 4 : "Contains at least one letter"})
+            return Response({"message" : "Password incorrect. Please check conditions below.", 1 : "Only letters and digits are allowed", 2 : "At least 8 characters", 3 : "Contains at least one digit", 4 : "Contains at least one letter"}, status=status.HTTP_400_BAD_REQUEST)
 
         # create and save user instance
         user = register_serializer.save()
