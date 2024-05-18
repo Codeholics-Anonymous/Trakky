@@ -6,6 +6,7 @@ from products_and_meals.api.views import (
                 api_update_product_view,
                 api_update_product_for_all_view,
                 api_delete_product_view,
+                api_delete_product_for_all_view,
                 api_create_product_view,
                 api_create_product_for_all_view,
                 #SUMMARY
@@ -34,6 +35,7 @@ urlpatterns = [
     path('product/<int:product_id>/update/', api_update_product_view, name='product_update'),
     path('product_manager/product/<int:product_id>/update/', api_update_product_for_all_view),
     path('product/<int:product_id>/delete/', api_delete_product_view, name='product_delete'),
+    path('product_manager/product/<int:product_id>/delete/', api_delete_product_for_all_view),
     path('create_product/', api_create_product_view, name='product_create'),
     path('product_manager/create_product/', api_create_product_for_all_view),
     #SUMMARY
