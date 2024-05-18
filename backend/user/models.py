@@ -39,9 +39,9 @@ class UserProfile(models.Model):
         age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
         # BMR - Basal metabolic rate
         if (sex == 'M'):
-            BMR = (10 * weight) + (6.25 * height) + (5 * age) + 5
+            BMR = (10 * weight) + (6.25 * height) - (5 * age) + 5
         else:
-            BMR = (10 * weight) + (6.25 * height) + (5 * age) - 161
+            BMR = (10 * weight) + (6.25 * height) - (5 * age) - 161
         # NEAT - Number of calories burned per day
         if (work_type == 1): # Physical work
             NEAT = BMR*0.4
