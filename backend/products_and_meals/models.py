@@ -116,7 +116,10 @@ class Summary(Macros):
         new_summary = cls(
             userprofile_id=userprofile_id,
             date=date,
-            daily_calory_intake=calories
+            daily_calory_intake=calories,
+            protein=protein,
+            carbohydrates=carbohydrates,
+            fat=fat
         )
         new_summary.save()
         return new_summary
