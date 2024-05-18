@@ -4,6 +4,7 @@ from datetime import date
 from utils.user_utils import gender_validation
 from utils.date import date_validation, age_validation
 from django.core.validators import MaxValueValidator
+from utils.date import calculate_age
 
 class UserProfile(models.Model):
     userprofile_id = models.AutoField(primary_key=True)
@@ -36,7 +37,7 @@ class UserProfile(models.Model):
     @classmethod
     def calculate_demand(cls, weight, height, birth_date, work_type, sex, user_goal):
         today = date.today()
-        age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+        age = calculate_age(birth_date)
         # BMR - Basal metabolic rate
         if (sex == 'M'):
             BMR = (10 * weight) + (6.25 * height) - (5 * age) + 5
@@ -44,9 +45,9 @@ class UserProfile(models.Model):
             BMR = (10 * weight) + (6.25 * height) - (5 * age) - 161
         # NEAT - Number of calories burned per day
         if (work_type == 1): # Physical work
-            NEAT = BMR*0.4
+            NEAT = BMR*0.5
         else: # Mental work
-            NEAT = BMR*0.2
+            NEAT = BMR*0.3
         result = BMR + NEAT
         # CHECK USER GOAL
         if (user_goal == -1):
