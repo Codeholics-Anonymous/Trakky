@@ -65,6 +65,10 @@ def api_update_product_view(request, product_id):
         if above_upper_limit(serializer.validated_data['protein'], serializer.validated_data['carbohydrates'], serializer.validated_data['fat'], limit=100):
             return short_response("message", f"Macros amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100})", status.HTTP_400_BAD_REQUEST) 
 
+        # check if product with this name does not exist in database
+        if Product.objects.filter(name=serializer.validated_data['name']).exists():
+            return short_response("message", "Product already exists.", status.HTTP_400_BAD_REQUEST)
+
         # update today's summary if this product has been added (optimization - don't update past summaries)
         mealitems = find_mealitems(user_id=request.user.id, product_id=product_id, date=date.today()) # list of mealitems (from today) that contains updated product
         mealitems_amount = len(mealitems)
@@ -141,28 +145,43 @@ def api_update_product_for_all_view(request, product_id):
             )
         return short_response("message", "Product updated.")
 
-@api_view(['DELETE'],)
-def api_delete_product_view(request, product_id):
+def delete_product(user_id, product_id):
     try:
-        product = Product.objects.get(product_id=product_id)
+        product = Product.objects.get(user_id=user_id, product_id=product_id)
     except Product.DoesNotExist:
-        return not_found_response()
+        return short_response("message", "You cannot delete this product.")
 
     operation = product.delete()
     if operation:
-        return short_response("Success", "deletion successful")
+        return short_response("message", "Deletion successful")
     else:
-        return short_response("Failure", "deletion failed", status.HTTP_400_BAD_REQUEST)
+        return short_response("message", "Deletion failed", status.HTTP_400_BAD_REQUEST)
+
+# view for deleting product only from products added by user
+
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_delete_product_view(request, product_id):
+    return delete_product(user_id=request.user.id, product_id=product_id)
+
+# view for deleting product from products available for all users (available only for Product Managers)
+
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsProductManager])
+def api_delete_product_for_all_view(request, product_id):
+    return delete_product(user_id=None, product_id=product_id)
 
 def add_product(request_data, user_id):
     serializer = ProductSerializer(data=request_data)
     if serializer.is_valid():
         # check if this product exists in database
         if Product.objects.filter(name=serializer.validated_data['name']).exists():
-            return short_response("Product", "already exists")
+            return short_response("message", "Product already exists.", status.HTTP_400_BAD_REQUEST)
         # check if sum of macros isn't larger than 100g
         if above_upper_limit(serializer.validated_data['protein'], serializer.validated_data['carbohydrates'], serializer.validated_data['fat'], limit=100):
-            return short_response("Macros", f"amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100})", status.HTTP_400_BAD_REQUEST)
+            return short_response("message", f"Macros amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100})", status.HTTP_400_BAD_REQUEST)
         # add product
         added_product = Product.add_product(
             user_id=user_id,
