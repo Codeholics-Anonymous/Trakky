@@ -34,30 +34,3 @@ def basic_macros(demand):
     carbohydrates = round(((0.5*demand) / 4), 1)
     fat = round(((0.3*demand) / 9), 1)
     return (protein, carbohydrates, fat)
-
-from products_and_meals.api.serializers import ProductSerializer
-from products_and_meals.models import Product
-from utils.responses import custom_response
-from rest_framework.response import Response
-from rest_framework import status
-
-def add_product(request_data, user_id):
-    serializer = ProductSerializer(data=request_data)
-    if serializer.is_valid():
-        # check if this product exists in database
-        if Product.objects.filter(name=serializer.validated_data['name']).exists():
-            return custom_response("Product", "already exists")
-        # check if sum of macros isn't larger than 100g
-        if above_upper_limit(serializer.validated_data['protein'], serializer.validated_data['carbohydrates'], serializer.validated_data['fat'], limit=100):
-            return custom_response("Macros", f"amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100})", status.HTTP_400_BAD_REQUEST)
-        # add product
-        added_product = Product.add_product(
-            user_id=user_id,
-            name=serializer.validated_data['name'],
-            protein=serializer.validated_data['protein'],
-            carbohydrates=serializer.validated_data['carbohydrates'],
-            fat=serializer.validated_data['fat'],
-        )
-        data = serializer.validated_data|{'calories_per_hundred_grams' : added_product.calories_per_hundred_grams}
-        return Response(data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

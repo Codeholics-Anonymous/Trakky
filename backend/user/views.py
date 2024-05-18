@@ -22,10 +22,10 @@ def login(request):
     try:
         user = User.objects.get(username=request.data['username'])
     except User.DoesNotExist:
-        return Response({"user" : "not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"message" : "user not found"}, status=status.HTTP_404_NOT_FOUND)
     
     if not user.check_password(request.data['password']):
-        return Response({"user" : "not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"message" : "user not found"}, status=status.HTTP_404_NOT_FOUND)
     
     token, created = Token.objects.get_or_create(user=user) # get or create token if it hasn't been created yet (f.e. because of user logout).
     serializer = UserSerializer(user)
@@ -42,7 +42,7 @@ def signup(request):
     if register_serializer.is_valid():
         # check if password satisfies validation
         if (not password_validation(register_data['password'])):
-            return Response({"Password incorrect" : "Please check conditions below", 1 : "Only letters and digits are allowed", 2 : "At least 8 characters", 3 : "Contains at least one digit", 4 : "Contains at least one letter"})
+            return Response({"message" : "Password incorrect. Please check conditions below.", 1 : "Only letters and digits are allowed", 2 : "At least 8 characters", 3 : "Contains at least one digit", 4 : "Contains at least one letter"})
 
         # create and save user instance
         user = register_serializer.save()
@@ -104,18 +104,18 @@ def logout(request):
         # find and delete user token
         token = Token.objects.get(user=request.user)
         token.delete()
-        return Response({'Logout' : 'successful'}, status=status.HTTP_200_OK)
+        return short_response("message", "Logout successful")
     except Token.DoesNotExist:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-from utils.responses import custom_response
+from utils.responses import short_response
 
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_delete_user_view(request):
     if (request.user.delete()):
-        return custom_response("Account", "deleted")
+        return short_response("message", "Account deleted")
     else:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 

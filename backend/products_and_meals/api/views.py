@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 
 from rest_framework import status
 from rest_framework.response import Response
-from utils.responses import custom_response, not_found_response
+from utils.responses import short_response, not_found_response
 
 from products_and_meals.models import (Product, Summary, Demand, Meal, MealItem)
 from products_and_meals.api.serializers import (ProductSerializer, SummarySerializer, DemandSerializer, MealSerializer, MealItemSerializer)
@@ -18,10 +18,12 @@ from django.db.models import Q
 
 from utils.products_and_meals_utils import above_upper_limit
 
+# find all products available to the user (by name parameter)
+
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def api_detail_product_view(request, product_name):
+def api_search_product_view(request, product_name):
     product = Product.objects.filter(Q(name__icontains=product_name) & (Q(user_id__isnull=True) | Q(user_id=request.user.id)))
     if (len(product) == 0):
         return not_found_response()
@@ -31,36 +33,57 @@ def api_detail_product_view(request, product_name):
         serializer.data[i]['calories_per_hundred_grams'] = product[i].calories_per_hundred_grams
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+# display user products added by him
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_display_user_products_view(request):
+    products = Product.objects.filter(user_id=request.user.id)
+    if len(products) == 0:
+        return short_response("message", "You haven't added any products yet.")
+    serializer = ProductSerializer(products, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
 from utils.products_and_meals_utils import find_mealitems
 
 @api_view(['PUT'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def api_update_product_view(request, product_id):
     try:
         product = Product.objects.get(product_id=product_id)
     except Product.DoesNotExist:
         return not_found_response()
 
-    if (product.user_id != request.user.id): # user can edit only products that were created by him
-        return custom_response("Product", "cannot be edited", status.HTTP_400_BAD_REQUEST)
+    if ((product.user_id is None) or (product.user_id != request.user.id)): # user can edit only products that were created by him
+        return short_response("message", "Product cannot be edited", status.HTTP_400_BAD_REQUEST)
 
     serializer = ProductSerializer(data=request.data)
     if serializer.is_valid():
-        # find userprofile to update summary later
-        userprofile_id = UserProfile.objects.get(user_id=request.user.id).userprofile_id
         # check if sum of macros isn't larger than 100g
         if above_upper_limit(serializer.validated_data['protein'], serializer.validated_data['carbohydrates'], serializer.validated_data['fat'], limit=100):
-            return custom_response("Macros", f"amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100})", status.HTTP_400_BAD_REQUEST) 
-        # update today summary if this product was added (optimization - don't update past summaries)
-        mealitems = find_mealitems(user_id=request.user.id, product_id=product_id, date=date.today()) # amount of products added today to summary
+            return short_response("message", f"Macros amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100})", status.HTTP_400_BAD_REQUEST) 
+
+        # check if product with this name does not exist in database
+        if Product.objects.filter(name=serializer.validated_data['name']).exists():
+            return short_response("message", "Product already exists.", status.HTTP_400_BAD_REQUEST)
+
+        # update today's summary if this product has been added (optimization - don't update past summaries)
+        mealitems = find_mealitems(user_id=request.user.id, product_id=product_id, date=date.today()) # list of mealitems (from today) that contains updated product
         mealitems_amount = len(mealitems)
-        if (mealitems_amount != 0):
+        mealitems_gram_amount = 0
+        userprofile_id = None
+
+        if (mealitems_amount > 0):
             # calculate product amount (grams)
-            mealitems_gram_amount = 0
             for x in mealitems:
                 mealitems_gram_amount += x.gram_amount
-            # call function to calculate how many protein, carbohydrates and fat we have (using information about grams of product)
+            # call function to calculate how many protein, carbohydrates and fat we have in these mealitems
             all_product_macros = Product.calculate_nutrition(gram_amount=mealitems_gram_amount, product=product)
-            # subtract calories, because past macros and calories of product aren't current
+            # find userprofile to update summary
+            userprofile_id = UserProfile.objects.get(user_id=request.user.id).userprofile_id
+            # subtract previous macros and calories 
             Summary.update_calories( 
                 userprofile_id=userprofile_id, 
                 increase=0, 
@@ -69,41 +92,110 @@ def api_update_product_view(request, product_id):
                 fat=all_product_macros[2], 
                 date=date.today()
                 )
-        # update product information provided by user
+
+        # update product using information provided by user
         updated_product = Product.update_product(
-            product_id=product_id, 
+            product=product, 
             name=serializer.validated_data['name'], 
             protein=serializer.validated_data['protein'],
-            fat=serializer.validated_data['fat'],
-            carbohydrates=serializer.validated_data['carbohydrates']
+            carbohydrates=serializer.validated_data['carbohydrates'],
+            fat=serializer.validated_data['fat']
             )
-        # after product update, we have to increase number of calories and macros in summary
-        all_updated_product_macros = Product.calculate_nutrition(gram_amount=mealitems_gram_amount, product=updated_product)
-        Summary.update_calories(
-            userprofile_id=userprofile_id, 
-            increase=1, 
-            protein=all_updated_product_macros[0],
-            carbohydrates=all_updated_product_macros[1],
-            fat=all_updated_product_macros[2],
-            date=date.today())
-        return custom_response("Success", "update successful")
+
+        if (mealitems_amount > 0):
+            # after product update, we have to increase number of calories and macros in summary
+            all_updated_product_macros = Product.calculate_nutrition(gram_amount=mealitems_gram_amount, product=updated_product)
+            Summary.update_calories(
+                userprofile_id=userprofile_id, 
+                increase=1, 
+                protein=all_updated_product_macros[0],
+                carbohydrates=all_updated_product_macros[1],
+                fat=all_updated_product_macros[2],
+                date=date.today()
+                )
+
+        return short_response("message", "Product updated.")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['DELETE'],)
-def api_delete_product_view(request, product_id):
+from utils.permissions import IsProductManager
+
+# Product Managers can edit products available for all users
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsProductManager])
+def api_update_product_for_all_view(request, product_id):
     try:
-        product = Product.objects.get(product_id=product_id)
+        product = Product.objects.get(user_id__isnull=True, product_id=product_id)
     except Product.DoesNotExist:
-        return not_found_response()
+        return short_response("message", "You cannot update this product.", status.HTTP_400_BAD_REQUEST)
+
+    serializer = ProductSerializer(product, data=request.data)
+    if serializer.is_valid():
+        # check if sum of macros isn't larger than 100g
+        if above_upper_limit(serializer.validated_data['protein'], serializer.validated_data['carbohydrates'], serializer.validated_data['fat'], limit=100):
+            return short_response("message", f"Macros amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100.0})", status.HTTP_400_BAD_REQUEST) 
+        # check if product with this name does not exist in database
+        if Product.objects.filter(name=serializer.validated_data['name']).exists():
+            return short_response("message", "Product already exists.", status.HTTP_400_BAD_REQUEST)
+        # update product
+        Product.update_product(
+            product=product, 
+            name=serializer.validated_data['name'], 
+            protein=serializer.validated_data['protein'], 
+            carbohydrates=serializer.validated_data['carbohydrates'], 
+            fat=serializer.validated_data['fat']
+            )
+        return short_response("message", "Product updated.")
+
+def delete_product(user_id, product_id):
+    try:
+        product = Product.objects.get(user_id=user_id, product_id=product_id)
+    except Product.DoesNotExist:
+        return short_response("message", "You cannot delete this product.")
 
     operation = product.delete()
-    data = {}
     if operation:
-        return custom_response("Success", "deletion successful")
+        return short_response("message", "Deletion successful")
     else:
-        return custom_response("Failure", "deletion failed", status.HTTP_400_BAD_REQUEST)
+        return short_response("message", "Deletion failed", status.HTTP_400_BAD_REQUEST)
 
-from utils.products_and_meals_utils import add_product
+# view for deleting product only from products added by user
+
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_delete_product_view(request, product_id):
+    return delete_product(user_id=request.user.id, product_id=product_id)
+
+# view for deleting product from products available for all users (available only for Product Managers)
+
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsProductManager])
+def api_delete_product_for_all_view(request, product_id):
+    return delete_product(user_id=None, product_id=product_id)
+
+def add_product(request_data, user_id):
+    serializer = ProductSerializer(data=request_data)
+    if serializer.is_valid():
+        # check if this product exists in database
+        if Product.objects.filter(name=serializer.validated_data['name']).exists():
+            return short_response("message", "Product already exists.", status.HTTP_400_BAD_REQUEST)
+        # check if sum of macros isn't larger than 100g
+        if above_upper_limit(serializer.validated_data['protein'], serializer.validated_data['carbohydrates'], serializer.validated_data['fat'], limit=100):
+            return short_response("message", f"Macros amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100})", status.HTTP_400_BAD_REQUEST)
+        # add product
+        added_product = Product.add_product(
+            user_id=user_id,
+            name=serializer.validated_data['name'],
+            protein=serializer.validated_data['protein'],
+            carbohydrates=serializer.validated_data['carbohydrates'],
+            fat=serializer.validated_data['fat'],
+        )
+        data = serializer.validated_data|{'calories_per_hundred_grams' : added_product.calories_per_hundred_grams}
+        return Response(data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
@@ -113,14 +205,11 @@ def api_create_product_view(request):
 
 # VIEW TO ADD PRODUCT FOR ALL USERS (AVAILABLE ONLY FOR PRODUCT MANAGERS)
 
-from utils.permissions import IsProductManager
-
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated, IsProductManager])
 def api_create_product_for_all_view(request):
     return add_product(request_data=request.data, user_id=None)
-
 
 # SUMMARY VIEWS
 
@@ -135,7 +224,7 @@ def api_detail_summary_view(request, starting_date, ending_date):
     d_end = datetime.strptime(ending_date, "%Y-%m-%d")
 
     if (d_start > d_end):
-        return custom_response("Data", "range is incorrect", status.HTTP_400_BAD_REQUEST)
+        return short_response("Data", "range is incorrect", status.HTTP_400_BAD_REQUEST)
 
     # empty summaries aren't store in database but we don't need to imitate they exist (anyway they will be included as 0)
     calories_sum = 0
@@ -167,7 +256,7 @@ def api_detail_demand_view(request, starting_date, ending_date):
     beginning_demand = None
     beginning_demand = Demand.objects.filter(userprofile_id=userprofile_id, date__lte=starting_date).order_by('-date').first()
     if beginning_demand is None:
-        return custom_response("No information", "about demand for the selected period", status.HTTP_404_NOT_FOUND)
+        return short_response("No information", "about demand for the selected period", status.HTTP_404_NOT_FOUND)
     # find all demands
     other_demands = Demand.objects.filter(userprofile_id=userprofile_id, date__gt=starting_date, date__lte=ending_date)
     all_demands = [beginning_demand,] + [_ for _ in other_demands]
@@ -394,14 +483,14 @@ def create_mealitem(type, user_id, request_data, date):
     # check if date isn't earlier than date of account creation
     account_creation_date = find_first_demand(userprofile_id).date
     if account_creation_date > datetime.strptime(date, "%Y-%m-%d").date():
-        return custom_response("Date", "earlier than account creation", status.HTTP_400_BAD_REQUEST)    
+        return short_response("message", "Date earlier than account creation", status.HTTP_400_BAD_REQUEST)    
     serializer = MealItemSerializer(data=request_data)
     if serializer.is_valid():
         # PRODUCT EXISTENCE
         try:
-            product_to_add = Product.objects.get(Q(product_id=serializer.validated_data['product_id']) & (Q(user_id=user_id) | Q(user_id=1))) # check if this product should be available for user
+            product_to_add = Product.objects.get(Q(product_id=serializer.validated_data['product_id']) & (Q(user_id=user_id) | Q(user_id__isnull=True))) # check if this product should be available for user
         except Product.DoesNotExist:
-            return custom_response("Product", "does not exist", status.HTTP_404_NOT_FOUND)
+            return short_response("Product", "does not exist", status.HTTP_404_NOT_FOUND)
         # MEAL EXISTENCE
         if not Meal.objects.filter(user_id=user_id, date=date, type=type).exists():
             Meal.add_meal(user_id=user_id, type=type, date=date)

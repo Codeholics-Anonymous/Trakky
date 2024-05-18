@@ -38,8 +38,7 @@ class Product(Macros):
         return new_product
 
     @classmethod
-    def update_product(cls, product_id, name, protein, carbohydrates, fat):
-        product = cls.objects.get(product_id=product_id)
+    def update_product(cls, product, name, protein, carbohydrates, fat):
         product.name = name
         product.protein = protein
         product.carbohydrates = carbohydrates
