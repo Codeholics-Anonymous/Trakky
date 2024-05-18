@@ -138,8 +138,8 @@ class Meal(models.Model):
 
 class MealItem(models.Model):
     meal_item_id = models.AutoField(primary_key=True)
-    meal = models.ForeignKey(Meal, on_delete=models.CASCADE, null=True, blank=True) # this field represents meal_id
-    product_id = models.IntegerField(null=False, blank=False)
+    meal = models.ForeignKey(Meal, on_delete=models.CASCADE, null=True, blank=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
     gram_amount = models.PositiveIntegerField(null=False, blank=False, validators=[MinValueValidator(1), MaxValueValidator(2000)])
 
     @classmethod
