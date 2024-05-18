@@ -128,13 +128,16 @@ def api_update_product_for_all_view(request, product_id):
     try:
         product = Product.objects.get(user_id__isnull=True, product_id=product_id)
     except Product.DoesNotExist:
-        return not_found_response()
+        return short_response("message", "You cannot update this product.", status.HTTP_400_BAD_REQUEST)
 
     serializer = ProductSerializer(product, data=request.data)
     if serializer.is_valid():
         # check if sum of macros isn't larger than 100g
         if above_upper_limit(serializer.validated_data['protein'], serializer.validated_data['carbohydrates'], serializer.validated_data['fat'], limit=100):
             return short_response("message", f"Macros amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100.0})", status.HTTP_400_BAD_REQUEST) 
+        # check if product with this name does not exist in database
+        if Product.objects.filter(name=serializer.validated_data['name']).exists():
+            return short_response("message", "Product already exists.", status.HTTP_400_BAD_REQUEST)
         # update product
         Product.update_product(
             product=product, 
