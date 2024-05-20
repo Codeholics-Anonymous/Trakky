@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { SafeAreaView, StatusBar } from 'react-native';
 import { SafeAreaView, ScrollView, StatusBar } from 'react-native';
 import DateDisplay from '../components/DateDisplay.js';
 import Header from '../components/Header.js';
