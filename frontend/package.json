@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@expo/metro-runtime": "~3.1.1",
+    "@react-native-community/datetimepicker": "^8.0.1",
     "@react-navigation/native": "^6.1.17",
     "@react-navigation/native-stack": "^6.9.26",
     "@types/react": "~18.2.45",
@@ -22,6 +23,7 @@
     "react-dom": "18.2.0",
     "react-native": "0.73.6",
     "react-native-circular-progress-indicator": "^4.4.2",
+    "react-native-date-picker": "^5.0.2",
     "react-native-dropdown-select-list": "^2.0.5",
     "react-native-reanimated": "~3.6.2",
     "react-native-safe-area-context": "4.8.2",

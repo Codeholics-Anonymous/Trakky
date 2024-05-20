@@ -1,7 +1,29 @@
 import { Text, View, TextInput, TouchableOpacity } from 'react-native';
 import { Logo250x250 } from '../components/Logo250x250';
+import { useState } from 'react';
 
 export function Register( {navigation} ) {
+  const [credentials, setCredentials] = useState({
+    login: "", 
+    password: ""
+  });
+
+  const handleLoginChange = (text) => {
+    setCredentials({ ...credentials, login: text });
+  };
+
+  const handlePasswordChange = (text) => {
+    setCredentials({ ...credentials, password: text });
+  };
+
+  const handleSubmit = () => {
+    // validate if login and password are possible to use 
+    navigation.navigate("UserDetails", {
+      login: credentials.login,
+      password: credentials.password
+    })
+  }
+  
   return (
     <View className="bg-gray-100">
       <View className='flex min-h-full flex-col justify-center px-6 py-12 lg:px-8'>
@@ -13,19 +35,16 @@ export function Register( {navigation} ) {
         <View className='m-2'>          
           <View className='flex items-center mx-8 space-y-4'>
             <View className='bg-gray-100 p-5 rounded-full w-full border-2 border-dark-green shadow-xl shadow-dark-green'>
-              <TextInput className='text-xl' placeholder='Login' />
+              <TextInput className='text-xl' placeholder='Login' value={credentials.login}
+        onChangeText={handleLoginChange} />
             </View>
 
             <View className='bg-gray-100 p-5 rounded-full w-full border-2 border-dark-green shadow-xl shadow-dark-green'>
-              <TextInput  className='text-xl' placeholder='Password'secureTextEntry/>
+              <TextInput  className='text-xl' placeholder='Password'secureTextEntry value={credentials.password}
+        onChangeText={handlePasswordChange}/>
             </View>
-
-            <View className='bg-gray-100 p-5 rounded-full w-full border-2 border-dark-green shadow-xl shadow-dark-green'>
-              <TextInput  className='text-xl' placeholder='Confirm Password'secureTextEntry/>
-            </View>
-            
             <View className='w-full' >
-              <TouchableOpacity className='bg-light-green p-3 rounded-full shadow-xl shadow-dark-green ' onPress={() => navigation.navigate("UserDetails")}>
+              <TouchableOpacity className='bg-light-green p-3 rounded-full shadow-xl shadow-dark-green ' onPress={handleSubmit}>
                 <Text className='text-center text-xl font-bold'>Sign Up</Text>
               </TouchableOpacity>
             </View>
