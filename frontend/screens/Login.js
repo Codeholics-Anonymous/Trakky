@@ -1,4 +1,4 @@
-import { Text, View, TextInput, TouchableOpacity, Button } from 'react-native';
+import { Text, View, TextInput, TouchableOpacity, Button, Alert} from 'react-native';
 import { Logo250x250 } from '../components/Logo250x250';
 import { useState } from 'react';
 import axios from 'axios';
@@ -13,18 +13,19 @@ export function Login( {navigation} ) {
     setCredentials({ ...credentials, login: text });
   };
 
-  // Handler to update state for password
   const handlePasswordChange = (text) => {
     setCredentials({ ...credentials, password: text });
   };
 
   const handleSubmit = () => {
-    // You can now use credentials.login and credentials.password
-    console.log('Login:', credentials.login);
-    console.log('Password:', credentials.password);
-    axios({
-      method: 'post',
-      url: "/api"
+    axios.post('http://127.0.0.1:8000/login/', {
+      username: credentials.login,
+      password: credentials.password
+    })
+    .then((response) =>{
+      // save to local storage and stuff, change screen to homescreen, do later bcs stuff
+    }, (error) => {
+      Alert.alert("User not found, try again")
     })
   };
 
@@ -60,6 +61,7 @@ export function Login( {navigation} ) {
             <TouchableOpacity onPress={() => navigation.navigate("Register")}>
               <Text title="Sign Up!" className='text-center text-xl text-dark-green'>Sign Up!</Text>
             </TouchableOpacity>
+
           </View>
         </View>
       </View> 
