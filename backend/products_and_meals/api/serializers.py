@@ -15,7 +15,7 @@ class ProductSerializer(serializers.ModelSerializer):
 class SummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Summary
-        exclude = ['summary_id', 'date']
+        exclude = ['summary_id', 'userprofile', 'date']
 
 class DemandSerializer(serializers.ModelSerializer):
     protein = serializers.FloatField(validators=[MaxValueValidator(500), MinValueValidator(0)])
@@ -32,8 +32,6 @@ class MealSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class MealItemSerializer(serializers.ModelSerializer):
-    product_id = serializers.PrimaryKeyRelatedField(source='product', queryset=Product.objects.all(), write_only=True)
-
     class Meta:
         model = MealItem
-        fields = ['product', 'product_id', 'gram_amount', 'meal_id']
+        fields = ['product_id', 'gram_amount', 'meal_id']
