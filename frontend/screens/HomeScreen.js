@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, StatusBar } from 'react-native';
 import DateDisplay from '../components/DateDisplay.js';
 import Header from '../components/Header.js';
@@ -25,9 +25,9 @@ export function HomeScreen() {
         <ProgressCircle />
         <DateDisplay />
         <MealBox title="Breakfast" />
-        <MealBox title="Brunch" />
-        <MealBox title="Lunch" />
-        <MealBox title="Dinner" />
+        <MealBox title="Breakfast" />
+        <MealBox title="Breakfast" />
+        <MealBox title="Breakfast" />
       </ScrollView>
     </SafeAreaView>
   );
