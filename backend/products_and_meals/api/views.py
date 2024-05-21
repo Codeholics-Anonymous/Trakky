@@ -424,11 +424,13 @@ def api_detail_meal_view(request, date):
 # MEALITEM VIEWS
 
 @api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def api_detail_meal_item_view(request, meal_item_id):
     try:
         meal_item = MealItem.objects.get(meal_item_id=meal_item_id)
     except MealItem.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return not_found_response()
 
     serializer = MealItemSerializer(meal_item)
     return Response(serializer.data)
@@ -462,6 +464,8 @@ def api_update_meal_item_view(request, meal_item_id):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def api_delete_meal_item_view(request, meal_item_id):
     try:
         meal_item = MealItem.objects.get(meal_item_id=meal_item_id)
@@ -481,11 +485,12 @@ def create_mealitem(type, user_id, request_data, date):
     account_creation_date = find_first_demand(userprofile_id).date
     if account_creation_date > datetime.strptime(date, "%Y-%m-%d").date():
         return short_response("message", "Date earlier than account creation", status.HTTP_400_BAD_REQUEST)    
+    # get data from input
     serializer = MealItemSerializer(data=request_data)
     if serializer.is_valid():
         # PRODUCT EXISTENCE
         try:
-            product_to_add = Product.objects.get(Q(product_id=serializer.validated_data['product_id']) & (Q(user_id=user_id) | Q(user_id__isnull=True))) # check if this product should be available for user
+            product_to_add = Product.objects.get(Q(product_id=serializer.validated_data['product'].product_id) & (Q(user_id=user_id) | Q(user_id__isnull=True))) # check if this product should be available for user
         except Product.DoesNotExist:
             return short_response("message", "Product does not exist", status.HTTP_404_NOT_FOUND)
         # MEAL EXISTENCE
@@ -502,7 +507,7 @@ def create_mealitem(type, user_id, request_data, date):
         # update summary
         Summary.update_calories(userprofile_id=userprofile_id, increase=True, protein=protein, carbohydrates=carbohydrates, fat=fat, date=date)
         # create data to return
-        data = serializer.validated_data|{'name' : product_to_add.name, 'calories' : round((4*protein + 4*carbohydrates + 9*fat)), 'protein' : round(protein, 1), 'carbohydrates' : round(carbohydrates, 1), 'fat' : round(fat, 1)}
+        data = {'product_id' : serializer.validated_data['product'].product_id, 'gram_amount' : serializer.validated_data['gram_amount'], 'name' : product_to_add.name, 'calories' : round((4*protein + 4*carbohydrates + 9*fat)), 'protein' : round(protein, 1), 'carbohydrates' : round(carbohydrates, 1), 'fat' : round(fat, 1)}
         return Response(data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
