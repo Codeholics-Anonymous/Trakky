@@ -32,6 +32,8 @@ class MealSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class MealItemSerializer(serializers.ModelSerializer):
+    product_id = serializers.PrimaryKeyRelatedField(source='product', queryset=Product.objects.all(), write_only=True)
+
     class Meta:
         model = MealItem
-        fields = ['product_id', 'gram_amount', 'meal_id']
+        fields = ['product', 'product_id', 'gram_amount', 'meal_id']
