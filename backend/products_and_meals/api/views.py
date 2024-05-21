@@ -66,7 +66,7 @@ def api_update_product_view(request, product_id):
             return short_response("message", f"Macros amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100})", status.HTTP_400_BAD_REQUEST) 
 
         # check if product with this name does not exist in database
-        if Product.objects.filter(name=serializer.validated_data['name']).exists():
+        if (serializer.validated_data['name'] != product.name) and Product.objects.filter(name=serializer.validated_data['name']).exists():
             return short_response("message", "Product already exists.", status.HTTP_400_BAD_REQUEST)
 
         # update today's summary if this product has been added (optimization - don't update past summaries)
@@ -136,7 +136,7 @@ def api_update_product_for_all_view(request, product_id):
         if above_upper_limit(serializer.validated_data['protein'], serializer.validated_data['carbohydrates'], serializer.validated_data['fat'], limit=100):
             return short_response("message", f"Macros amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100.0})", status.HTTP_400_BAD_REQUEST) 
         # check if product with this name does not exist in database
-        if Product.objects.filter(name=serializer.validated_data['name']).exists():
+        if (product.name != serializer.validated_data['name']) and Product.objects.filter(name=serializer.validated_data['name']).exists():
             return short_response("message", "Product already exists.", status.HTTP_400_BAD_REQUEST)
         # update product
         Product.update_product(
