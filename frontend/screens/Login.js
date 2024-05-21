@@ -18,13 +18,15 @@ export function Login( {navigation} ) {
   };
 
   const handleSubmit = () => {
-    axios.post('http://127.0.0.1:8000/login/', {
+    axios.post('http://10.0.2.2:8000/login/', {
       username: credentials.login,
       password: credentials.password
     })
     .then((response) =>{
-      // save to local storage and stuff, change screen to homescreen, do later bcs stuff
+      const {token, user} = response.data;
+      console.log(token, user.username);
     }, (error) => {
+      console.log(credentials)
       Alert.alert("User not found, try again")
     })
   };

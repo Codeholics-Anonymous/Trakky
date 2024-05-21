@@ -35,7 +35,7 @@ export function UserDetails({ route, navigation }) {
   const handleSubmit = () => {
     const formattedBirthDate = formatDate(userProfileData.birthDate); // Assuming formatDate function exists as defined previously
   
-    axios.post('http://127.0.0.1:8000/signup/', {
+    axios.post('http://10.0.2.2:8000/register/', {
       register_data: {
         username: login,
         password: password
@@ -58,6 +58,7 @@ export function UserDetails({ route, navigation }) {
     })
     .catch((error) => {
       // Handle error response
+      console.log(userProfileData);
       console.error(error);
       Alert.alert("Error", "Something went wrong. Please try again.");
     });
@@ -112,7 +113,6 @@ export function UserDetails({ route, navigation }) {
       <Button 
         title="Submit"
         onPress={() => {
-          console.log(userProfileData)
           handleSubmit()
         }}
       />
