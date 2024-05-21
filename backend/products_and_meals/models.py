@@ -23,7 +23,7 @@ class Macros(models.Model):
 
 class Product(Macros):
     product_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField(blank=True, null=True) # foreign key to user_id at django User class
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=250, blank=False, null=False)
 
     @property
@@ -38,8 +38,7 @@ class Product(Macros):
         return new_product
 
     @classmethod
-    def update_product(cls, product_id, name, protein, carbohydrates, fat):
-        product = cls.objects.get(product_id=product_id)
+    def update_product(cls, product, name, protein, carbohydrates, fat):
         product.name = name
         product.protein = protein
         product.carbohydrates = carbohydrates
@@ -54,14 +53,14 @@ class Product(Macros):
 
 class Demand(Macros):
     demand_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField(blank=True, null=True)
+    userprofile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
     daily_calory_demand = models.PositiveIntegerField(null=False, blank=False, validators=[MaxValueValidator(12250)])
     date = models.DateField(null=True, blank=True)
-
+    
     @classmethod
-    def update_calories(cls, user_id, protein, fat, carbohydrates, daily_calory_demand):
+    def update_calories(cls, userprofile_id, protein, fat, carbohydrates, daily_calory_demand):
         try:
-            demand = cls.objects.filter(user_id=user_id, date=date.today()).order_by('-demand_id').first() # filter and not get because it can be more than 1 demand in creation account day
+            demand = cls.objects.filter(userprofile_id=userprofile_id, date=date.today()).order_by('-demand_id').first() 
             demand.protein = protein
             demand.fat = fat
             demand.carbohydrates = carbohydrates
@@ -72,9 +71,9 @@ class Demand(Macros):
             return None
 
     @classmethod
-    def create_demand(cls, user_id, date, protein, carbohydrates, fat, daily_calory_demand):
+    def create_demand(cls, userprofile_id, date, protein, carbohydrates, fat, daily_calory_demand):
         new_demand = cls(
-            user_id=user_id,
+            userprofile_id=userprofile_id,
             date=date,
             protein=protein,
             carbohydrates=carbohydrates,
@@ -86,14 +85,14 @@ class Demand(Macros):
 
 class Summary(Macros):
     summary_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField(null=False, blank=False)
+    userprofile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
     daily_calory_intake = models.PositiveIntegerField(null=False, blank=False)
     date = models.DateField()
 
     @classmethod
-    def update_calories(cls, user_id, increase, fat, protein, carbohydrates, date):
+    def update_calories(cls, userprofile_id, increase, fat, protein, carbohydrates, date):
         try:
-            summary = cls.objects.get(user_id=user_id, date=date)
+            summary = cls.objects.get(userprofile_id=userprofile_id, date=date)
             change = round((protein * 4) + (carbohydrates * 4) + (fat * 9))
             if increase:
                 summary.daily_calory_intake = round(summary.daily_calory_intake + change, 1)
@@ -111,20 +110,23 @@ class Summary(Macros):
             return None
 
     @classmethod
-    def create_summary(cls, user_id, date, fat=0, protein=0, carbohydrates=0):
+    def create_summary(cls, userprofile_id, date, fat=0, protein=0, carbohydrates=0):
         calories = round((protein * 4) + (carbohydrates * 4) + (fat * 9))
 
         new_summary = cls(
-            user_id=user_id,
+            userprofile_id=userprofile_id,
             date=date,
-            daily_calory_intake=calories
+            daily_calory_intake=calories,
+            protein=protein,
+            carbohydrates=carbohydrates,
+            fat=fat
         )
         new_summary.save()
         return new_summary
 
 class Meal(models.Model):
     meal_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField(null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     type = models.CharField(max_length=250)
     date = models.DateField()
 
@@ -136,8 +138,8 @@ class Meal(models.Model):
 
 class MealItem(models.Model):
     meal_item_id = models.AutoField(primary_key=True)
-    meal_id = models.IntegerField(null=True, blank=True)
-    product_id = models.IntegerField(null=False, blank=False)
+    meal = models.ForeignKey(Meal, on_delete=models.CASCADE, null=True, blank=True)
+    product_id = models.PositiveIntegerField(null=False, blank=False)
     gram_amount = models.PositiveIntegerField(null=False, blank=False, validators=[MinValueValidator(1), MaxValueValidator(2000)])
 
     @classmethod

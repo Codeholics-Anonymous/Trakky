@@ -17,3 +17,4 @@ def password_validation(password):
 def gender_validation(gender):
     if (gender not in ('M', 'F', 'O')):
         raise ValidationError("Incorrect gender")
+        
