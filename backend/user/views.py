@@ -109,11 +109,17 @@ def logout(request):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 from utils.responses import short_response
+from products_and_meals.models import Product
 
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_delete_user_view(request):
+    # delete all products added by this user
+    products = Product.objects.filter(user_id=request.user.id)
+    for x in products:
+        x.delete()
+    # delete user 
     if (request.user.delete()):
         return short_response("message", "Account deleted")
     else:
