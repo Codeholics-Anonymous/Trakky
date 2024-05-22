@@ -1,6 +1,9 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HomeScreen } from './screens/HomeScreen';
+import { Login } from './screens/Login';
+import { Register } from './screens/Register';
+import { UserDetails } from './screens/UserDetails';
 import { useEffect, useState } from 'react';
 import { hasUserData } from './utils/Auth';
 
