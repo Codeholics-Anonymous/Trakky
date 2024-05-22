@@ -237,7 +237,7 @@ def api_detail_summary_view(request, starting_date, ending_date):
         carbohydrates_sum += x.carbohydrates
         fat_sum += x.fat
 
-    return Response({'calories_sum' : round(calories_sum), 'protein_sum' : round(protein_sum, 1), 'carbohydrates_sum' : round(carbohydrates_sum, 1), 'fat_sum' : round(fat_sum, 1)})
+    return Response({'summary_calories_sum' : round(calories_sum), 'summary_protein_sum' : round(protein_sum, 1), 'summary_carbohydrates_sum' : round(carbohydrates_sum, 1), 'summary_fat_sum' : round(fat_sum, 1)})
 
 # DEMAND VIEWS
 # ways to create demand:
@@ -250,13 +250,15 @@ from utils.date import calculate_days_difference, date_validation
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_detail_demand_view(request, starting_date, ending_date):
-    userprofile_id = UserProfile.objects.get(user_id=user_id).userprofile_id
-    date_validation(starting_date, ending_date)
+    userprofile_id = UserProfile.objects.get(user_id=request.user.id).userprofile_id
+    # validate date
+    if (starting_date > ending_date):
+        return short_response("message", "Incorrect date", status.HTTP_400_BAD_REQUEST)
     # check first demand existence
     beginning_demand = None
     beginning_demand = Demand.objects.filter(userprofile_id=userprofile_id, date__lte=starting_date).order_by('-date').first()
     if beginning_demand is None:
-        return short_response("No information", "about demand for the selected period", status.HTTP_404_NOT_FOUND)
+        return short_response("message", "No information about demand for the selected period", status.HTTP_404_NOT_FOUND)
     # find all demands
     other_demands = Demand.objects.filter(userprofile_id=userprofile_id, date__gt=starting_date, date__lte=ending_date)
     all_demands = [beginning_demand,] + [_ for _ in other_demands]
@@ -424,20 +426,32 @@ def api_detail_meal_view(request, date):
 # MEALITEM VIEWS
 
 @api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def api_detail_meal_item_view(request, meal_item_id):
     try:
         meal_item = MealItem.objects.get(meal_item_id=meal_item_id)
     except MealItem.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return not_found_response()
 
-    serializer = MealItemSerializer(meal_item)
-    return Response(serializer.data)
+    # find product from this mealitem and calculate macros of this product
+    product = Product.objects.get(product_id=meal_item.product_id)
+    macros = Product.calculate_nutrition(meal_item.gram_amount, product)
+
+    data = {
+        'product_name' : product.name, 
+        'gram_amount' : meal_item.gram_amount, 
+        'protein' : macros[0], 
+        'carbohydrates' : macros[1], 
+        'fat' : macros[2], 
+        'calories' : 4*macros[0] + 4*macros[1] + 9*macros[2]}
+
+    return Response(data, status=status.HTTP_200_OK)
 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_update_meal_item_view(request, meal_item_id):
-    userprofile_id = UserProfile.objects.get(user_id=request.user.id).userprofile_id
     try:
         mealitem = MealItem.objects.get(meal_item_id=meal_item_id)
     except MealItem.DoesNotExist:
@@ -445,6 +459,9 @@ def api_update_meal_item_view(request, meal_item_id):
     
     serializer = MealItemSerializer(mealitem, request.data)
     if serializer.is_valid():
+        # users shouldn't be allowed to change product when updating mealitem
+        if serializer.validated_data['product_id'] != mealitem.product_id:
+            return short_response("message", "Product cannot be changed.", status.HTTP_400_BAD_REQUEST)
         # get product 
         product = Product.objects.get(product_id=mealitem.product_id)
         grams_difference = serializer.validated_data['gram_amount'] - mealitem.gram_amount # calculate difference between grams
@@ -452,16 +469,32 @@ def api_update_meal_item_view(request, meal_item_id):
         # update summary
         meal_id = mealitem.meal_id # find id of meal this mealitem belongs to
         summary_date = Meal.objects.get(meal_id=meal_id).date # since we have mealitem, it must exist
+        userprofile_id = UserProfile.objects.get(user_id=request.user.id).userprofile_id # find userprofile id to find summary in summary update_calories method
         if grams_difference < 0:
             new_summary = Summary.update_calories(userprofile_id=userprofile_id, increase=0, protein=product_macros[0], carbohydrates=product_macros[1], fat=product_macros[2], date=summary_date)
         else:
             new_summary = Summary.update_calories(userprofile_id=userprofile_id, increase=1, protein=product_macros[0], carbohydrates=product_macros[1], fat=product_macros[2], date=summary_date)
         summary_serializer = SummarySerializer(new_summary)
-        serializer.save()
-        return Response(serializer.validated_data|summary_serializer.data, status=status.HTTP_200_OK)
+        # prepare data to return
+        final_macros = Product.calculate_nutrition(gram_amount=mealitem.gram_amount+grams_difference, product=product) # calculate final macros
+        modified_mealitem_data = {
+            'calories' : 4*final_macros[0] + 4*final_macros[1] + 9*final_macros[2],
+            'protein' : final_macros[0],
+            'carbohydrates' : final_macros[1],
+            'fat' : final_macros[2]
+        }
+        serializer.save() # save info about mealitem
+        modified_summary_data = summary_serializer.data
+        response_data = {
+            'modified_mealitem_data' : modified_mealitem_data,
+            'modified_summary_data' : modified_summary_data
+        }
+        return Response(response_data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
 def api_delete_meal_item_view(request, meal_item_id):
     try:
         meal_item = MealItem.objects.get(meal_item_id=meal_item_id)
@@ -481,6 +514,7 @@ def create_mealitem(type, user_id, request_data, date):
     account_creation_date = find_first_demand(userprofile_id).date
     if account_creation_date > datetime.strptime(date, "%Y-%m-%d").date():
         return short_response("message", "Date earlier than account creation", status.HTTP_400_BAD_REQUEST)    
+    # get data from input
     serializer = MealItemSerializer(data=request_data)
     if serializer.is_valid():
         # PRODUCT EXISTENCE

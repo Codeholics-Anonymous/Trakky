@@ -23,7 +23,7 @@ class Macros(models.Model):
 
 class Product(Macros):
     product_id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=250, blank=False, null=False)
 
     @property
@@ -139,7 +139,7 @@ class Meal(models.Model):
 class MealItem(models.Model):
     meal_item_id = models.AutoField(primary_key=True)
     meal = models.ForeignKey(Meal, on_delete=models.CASCADE, null=True, blank=True)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
+    product_id = models.PositiveIntegerField(null=False, blank=False)
     gram_amount = models.PositiveIntegerField(null=False, blank=False, validators=[MinValueValidator(1), MaxValueValidator(2000)])
 
     @classmethod

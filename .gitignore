@@ -1,5 +1,5 @@
 # Ignoruj ustawienia serwera z informacjami poufnymi
-settings.py
+
 
 # Ignoruj pliki i katalogi utworzone przez systemy operacyjne
 .DS_Store

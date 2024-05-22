@@ -12,6 +12,7 @@ from products_and_meals.api.serializers import DemandSerializer
 from datetime import date
 
 from utils.products_and_meals_utils import find_first_demand, basic_macros
+from utils.responses import short_response, not_found_response
 
 # USER AUTHENTICATION
 
@@ -22,10 +23,10 @@ def login(request):
     try:
         user = User.objects.get(username=request.data['username'])
     except User.DoesNotExist:
-        return Response({"message" : "user not found"}, status=status.HTTP_404_NOT_FOUND)
+        return short_response("message", "user not found", status.HTTP_404_NOT_FOUND)
     
     if not user.check_password(request.data['password']):
-        return Response({"message" : "user not found"}, status=status.HTTP_404_NOT_FOUND)
+        return short_response("message", "user not found", status.HTTP_404_NOT_FOUND)
     
     token, created = Token.objects.get_or_create(user=user) # get or create token if it hasn't been created yet (f.e. because of user logout).
     serializer = UserSerializer(user)
@@ -109,11 +110,17 @@ def logout(request):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 from utils.responses import short_response
+from products_and_meals.models import Product
 
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_delete_user_view(request):
+    # delete all products added by this user
+    products = Product.objects.filter(user_id=request.user.id)
+    for x in products:
+        x.delete()
+    # delete user 
     if (request.user.delete()):
         return short_response("message", "Account deleted")
     else:
@@ -128,10 +135,12 @@ def api_detail_userprofile_view(request):
     try:
         userprofile = UserProfile.objects.get(user_id=request.user.id)
     except UserProfile.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return not_found_response()
 
     serializer = UserProfileSerializer(userprofile)
     return Response(serializer.data)
+
+# AFTER THIS REQUEST, WE HAVE TO CHECK IF USER IS USING BASIC DEMAND - IF SO, WE SHOULD SEND ANOTHER REQUEST TO GET BASIC DEMAND INFO AND CHANGE DEMAND FOR CURRENT DAY
 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
@@ -140,7 +149,7 @@ def api_update_userprofile_view(request):
     try:
         userprofile = UserProfile.objects.get(user_id=request.user.id)
     except UserProfile.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return not_found_response()
 
     serializer = UserProfileSerializer(userprofile, request.data)
     if (UserProfile.update_profile(serializer)):
