@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SafeAreaView, ScrollView, StatusBar } from 'react-native';
 import DateDisplay from '../components/DateDisplay.js';
 import Header from '../components/Header.js';
 import MealBox from '../components/MealBox.js';
 import ProgressCircle from '../components/ProgressCircle.js';
+import { getUserData } from '../utils/Auth'
 
 export function HomeScreen() {
   const [showDefaultProgress, setShowDefaultProgress] = useState(true);

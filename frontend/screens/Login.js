@@ -2,6 +2,7 @@ import { Text, View, TextInput, TouchableOpacity, Button, Alert} from 'react-nat
 import { Logo250x250 } from '../components/Logo250x250';
 import { useState } from 'react';
 import axios from 'axios';
+import { saveUserData, getUserData } from '../utils/Auth'
 
 export function Login( {navigation} ) {
   const [credentials, setCredentials] = useState({
@@ -22,11 +23,11 @@ export function Login( {navigation} ) {
       username: credentials.login,
       password: credentials.password
     })
-    .then((response) =>{
+    .then(async (response) =>{
       const {token, user} = response.data;
-      console.log(token, user.username);
+      saveUserData(token, user.username);
+      navigation.replace("HomeScreen")
     }, (error) => {
-      console.log(credentials)
       Alert.alert("User not found, try again")
     })
   };
@@ -60,7 +61,7 @@ export function Login( {navigation} ) {
 
           <View className="fixed w-full p-4">
             <Text className='text-center'>Don`t have an account?</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+            <TouchableOpacity onPress={() =>  navigation.navigate("Register")}>
               <Text title="Sign Up!" className='text-center text-xl text-dark-green'>Sign Up!</Text>
             </TouchableOpacity>
 
