@@ -7,7 +7,8 @@ import { UserDetails } from './screens/UserDetails';
 import { useEffect, useState } from 'react';
 import { hasUserData } from './utils/Auth';
 import { Settings } from './screens/Settings';
-
+import { SettingsUser } from './screens/SettingsUser'
+import { AddingProduct } from './screens/AddingProduct';
 const Stack = createNativeStackNavigator();
 
 function App() {
@@ -32,6 +33,8 @@ function App() {
         <Stack.Screen name="UserDetails" component={UserDetails} />
         <Stack.Screen options={{ headerShown: false }} name="HomeScreen" component={HomeScreen} />
         <Stack.Screen name="Settings" component={Settings} />
+        <Stack.Screen name="SettingsUser" component={SettingsUser} />
+        <Stack.Screen name="AddingProduct" component={AddingProduct} />
       </Stack.Navigator>
     </NavigationContainer>
   );
