@@ -237,7 +237,7 @@ def api_detail_summary_view(request, starting_date, ending_date):
         carbohydrates_sum += x.carbohydrates
         fat_sum += x.fat
 
-    return Response({'calories_sum' : round(calories_sum), 'protein_sum' : round(protein_sum, 1), 'carbohydrates_sum' : round(carbohydrates_sum, 1), 'fat_sum' : round(fat_sum, 1)})
+    return Response({'summary_calories_sum' : round(calories_sum), 'summary_protein_sum' : round(protein_sum, 1), 'summary_carbohydrates_sum' : round(carbohydrates_sum, 1), 'summary_fat_sum' : round(fat_sum, 1)})
 
 # DEMAND VIEWS
 # ways to create demand:
@@ -250,13 +250,15 @@ from utils.date import calculate_days_difference, date_validation
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_detail_demand_view(request, starting_date, ending_date):
-    userprofile_id = UserProfile.objects.get(user_id=user_id).userprofile_id
-    date_validation(starting_date, ending_date)
+    userprofile_id = UserProfile.objects.get(user_id=request.user.id).userprofile_id
+    # validate date
+    if (starting_date > ending_date):
+        return short_response("message", "Incorrect date", status.HTTP_400_BAD_REQUEST)
     # check first demand existence
     beginning_demand = None
     beginning_demand = Demand.objects.filter(userprofile_id=userprofile_id, date__lte=starting_date).order_by('-date').first()
     if beginning_demand is None:
-        return short_response("No information", "about demand for the selected period", status.HTTP_404_NOT_FOUND)
+        return short_response("message", "No information about demand for the selected period", status.HTTP_404_NOT_FOUND)
     # find all demands
     other_demands = Demand.objects.filter(userprofile_id=userprofile_id, date__gt=starting_date, date__lte=ending_date)
     all_demands = [beginning_demand,] + [_ for _ in other_demands]
