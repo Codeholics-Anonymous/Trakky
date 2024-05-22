@@ -31,3 +31,9 @@ export const hasUserData = async () => {
   const { token, username } = await getUserData();
   return token !== null && username !== null;
 };
+
+/*
+  to get token and username
+  import { getUserData } from ...
+  const { token, username } = await getUserData();
+*/
