@@ -6,8 +6,7 @@ import axios from 'axios';
 import { useState } from 'react';
 import { saveUserData } from '../utils/Auth'
 
-export function UserDetails({ route, navigation }) {
-  const { login, password } = route.params;
+export function Settings({ navigation }) {
 
   const [userProfileData, setUserProfileData] = useState({
     sex: "",
@@ -34,38 +33,10 @@ export function UserDetails({ route, navigation }) {
   };
 
   const handleSubmit = () => {
-    const formattedBirthDate = formatDate(userProfileData.birthDate); // Assuming formatDate function exists as defined previously
-  
-    axios.post(`https://trakky.onrender.com/register/`, {
-      register_data: {
-        username: login,
-        password: password
-      },
-      userprofile_data: {
-        sex: userProfileData.sex,
-        birth_date: formattedBirthDate,
-        work_type: userProfileData.workType,
-        weight: userProfileData.weight,
-        height: userProfileData.height,
-        user_goal: userProfileData.userGoal
-      }
-    })
-    .then((response) => {
-      Alert.alert("Singed In successfully")
-      saveUserData(response.data.token, response.data.user.username);
+    navigation.pop();
+  }
 
-      navigation.reset({
-        index: 0,
-        routes: [{name: 'HomeScreen'}]
-      });
-    })
-    .catch((error) => {
-      // Handle error response
-      console.error(error);
-      navigation.pop();
-      Alert.alert("Error", "Something went wrong. Please try again.");
-    });
-  };
+
 
   return (
     <View className="bg-gray-100 flex min-h-full flex-col px-6 py-12 lg:px-8">
@@ -76,6 +47,7 @@ export function UserDetails({ route, navigation }) {
           placeholder="Select Sex"
         />
       </View>
+
       <View className="m-2">
         <SelectList 
           data={[{ key: 1, value: 'Physical Worker' }, { key: 0, value: 'Intellectual Worker' }]}
@@ -129,6 +101,11 @@ export function UserDetails({ route, navigation }) {
           }}
         />
       </View>
+      <View className="flex-1 justify-end items-center">
+        <TouchableOpacity onPress={() => navigation.navigate("HomeScreen")}>
+          <Text className="text-center text-xl text-dark-gray">Logout!</Text>
+        </TouchableOpacity>
+    </View>
     </View>
   );
 }

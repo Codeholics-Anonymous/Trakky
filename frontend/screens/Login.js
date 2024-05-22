@@ -19,7 +19,7 @@ export function Login( {navigation} ) {
   };
 
   const handleSubmit = () => {
-    axios.post('http://10.0.2.2:8000/login/', {
+    axios.post(`https://trakky.onrender.com/login/`, {
       username: credentials.login,
       password: credentials.password
     })
@@ -28,7 +28,8 @@ export function Login( {navigation} ) {
       saveUserData(token, user.username);
       navigation.replace("HomeScreen")
     }, (error) => {
-      Alert.alert("User not found, try again")
+      console.log(error)
+      Alert.alert("Error, try again")
     })
   };
 
