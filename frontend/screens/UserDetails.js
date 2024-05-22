@@ -4,6 +4,7 @@ import { SelectList } from 'react-native-dropdown-select-list'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
 import { useState } from 'react';
+import { saveUserData } from '../utils/Auth'
 
 export function UserDetails({ route, navigation }) {
   const { login, password } = route.params;
@@ -50,16 +51,18 @@ export function UserDetails({ route, navigation }) {
       }
     })
     .then((response) => {
-      // Handle successful response
-      console.log(response.data);
-      // Save to local storage and navigate to home screen
-      // localStorage.setItem('userToken', response.data.token); // Example of saving to local storage
-      // navigation.navigate('HomeScreen'); // Example of navigation
+      Alert.alert("Singed In successfully")
+      saveUserData(response.data.token, response.data.user.username);
+
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'HomeScreen'}]
+      });
     })
     .catch((error) => {
       // Handle error response
-      console.log(userProfileData);
       console.error(error);
+      navigation.pop();
       Alert.alert("Error", "Something went wrong. Please try again.");
     });
   };
