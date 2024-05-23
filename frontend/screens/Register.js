@@ -1,4 +1,4 @@
-import { Text, View, TextInput, TouchableOpacity } from 'react-native';
+import { Text, View, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { Logo250x250 } from '../components/Logo250x250';
 import { useState } from 'react';
 
@@ -7,6 +7,28 @@ export function Register( {navigation} ) {
     login: "", 
     password: ""
   });
+
+  function passwordValidation(password) {
+    // Check if password is alphanumeric and has at least 8 characters
+    if (!password.match(/^[a-zA-Z0-9]{8,}$/) || password.match(/^\d+$/)) {
+        return 0;
+    }
+
+    // Check if password contains at least one digit
+    let containDigit = false;
+    for (let i = 0; i < password.length; i++) {
+        if (!isNaN(parseInt(password[i]))) {
+            containDigit = true;
+            break;
+        }
+    }
+
+    if (!containDigit) {
+        return 0;
+    }
+
+    return 1;
+  }
 
   const handleLoginChange = (text) => {
     setCredentials({ ...credentials, login: text });
@@ -17,11 +39,15 @@ export function Register( {navigation} ) {
   };
 
   const handleSubmit = () => {
-    // validate if login and password are possible to use 
-    navigation.navigate("UserDetails", {
-      login: credentials.login,
-      password: credentials.password
-    })
+    if(passwordValidation(credentials.password)) {
+      navigation.navigate("UserDetails", {
+        login: credentials.login,
+        password: credentials.password
+      })
+    } else {
+      Alert.alert("Password must be alphanumeric, at least 8 characters long, and contain at least one digit.")
+      setCredentials({login: credentials.login, password: ""})
+    }
   }
   
   return (
