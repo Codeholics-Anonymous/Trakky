@@ -32,6 +32,15 @@ export const hasUserData = async () => {
   return token !== null && username !== null;
 };
 
+// Function to reset user data
+export const resetUserData = async () => {
+  try {
+    await AsyncStorage.multiRemove(['token', 'username']);
+  } catch (e) {
+    console.error('Failed to reset user data:', e);
+  }
+};
+
 /*
   to get token and username
   import { getUserData } from ...

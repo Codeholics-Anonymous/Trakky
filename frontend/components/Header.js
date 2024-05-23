@@ -2,7 +2,11 @@ import React from 'react';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
-const Header = () => {
+const Header = ({navigation}) => {
+  const handleSettings = () => {
+    navigation.navigate("Settings");
+  }
+  
   return (
     <View className="bg-dark-green flex-row items-center justify-start w-full h-7.5 p-4" style={{elevation: 15}}>
       {/* logo */}
@@ -12,7 +16,7 @@ const Header = () => {
         <Text className="text-white text-lg font-bold">TRAKKY</Text>
       </View>
       {/* settings icon */}
-      <TouchableOpacity className="ml-auto mr-2">
+      <TouchableOpacity className="ml-auto mr-2" onPress={handleSettings}>
         <FontAwesome name="bars" size={34} className="text-gray"/>
       </TouchableOpacity>
       </View>

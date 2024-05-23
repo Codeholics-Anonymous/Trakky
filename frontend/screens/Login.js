@@ -2,7 +2,7 @@ import { Text, View, TextInput, TouchableOpacity, Button, Alert} from 'react-nat
 import { Logo250x250 } from '../components/Logo250x250';
 import { useState } from 'react';
 import axios from 'axios';
-import { saveUserData, getUserData } from '../utils/Auth'
+import { saveUserData } from '../utils/Auth'
 
 export function Login( {navigation} ) {
   const [credentials, setCredentials] = useState({
@@ -23,12 +23,11 @@ export function Login( {navigation} ) {
       username: credentials.login,
       password: credentials.password
     })
-    .then((response) =>{
+    .then(async (response) =>{
       const {token, user} = response.data;
-      saveUserData(token, user.username);
+      await saveUserData(token, user.username);
       navigation.replace("HomeScreen")
     }, (error) => {
-      console.log(error)
       Alert.alert("Error, try again")
     })
   };

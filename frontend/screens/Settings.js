@@ -1,13 +1,12 @@
 import { View, Text, TouchableOpacity } from "react-native"
-import { AddingProduct } from "./AddingProduct"
-import { saveUserData } from "../utils/Auth"
+import { resetUserData } from "../utils/Auth"
 
 export function Settings({ navigation }) {
-  const handleLogout = () => {
-    saveUserData(null, null);
+  const handleLogout = async () => {
+    await resetUserData();
     navigation.reset({
       index: 0,
-      routes: [{name: 'HomeScreen'}]
+      routes: [{name: 'Login'}]
     });
   }
   return (
