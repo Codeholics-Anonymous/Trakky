@@ -126,6 +126,17 @@ def api_delete_user_view(request):
     else:
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
+# check if user is product manager
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_is_product_manager_view(request):
+    if request.user.groups.filter(name='Product Managers').exists():
+        return short_response("manager", 1)
+    else:
+        return short_response("manager", 0)
+
 # USERPROFILE VIEWS
 
 @api_view(['GET'])
