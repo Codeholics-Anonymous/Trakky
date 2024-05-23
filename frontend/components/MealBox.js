@@ -1,24 +1,43 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import CommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useMealData } from './MealDataContext'; // Adjust path as necessary
 
 const MealBox = ({ title }) => {
   const [expanded, setExpanded] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [content, setContent] = useState([]);
+  const { mealData } = useMealData();
   const [productName, setProductName] = useState('');
   const [productCalories, setProductCalories] = useState('');
+  const [content, setContent] = useState([]);
 
   const addContent = () => {
     if (productName && productCalories) {
-      setContent([...content, { name: productName, calories: parseInt(productCalories) }]);
+      const newProduct = { name: productName, calories: parseInt(productCalories) };
+      setContent([...content, newProduct]);
       setProductName('');
       setProductCalories('');
       setModalVisible(false);
     }
   };
 
-  const totalCalories = content.reduce((total, item) => total + item.calories, 0);
+  // Helper function to flatten the data structure
+  const flattenMealData = (data) => {
+    return data.map((item) => Object.values(item)[0]);
+  };
+
+  // Flattened data for rendering
+  const flattenedData = flattenMealData(mealData);
+
+  // Combined data from fetched and manually added products
+  const combinedData = [...flattenedData, ...content];
+
+  // Calculate total calories using reduce, handle case where combinedData may be empty or improperly formatted
+  const totalCalories = combinedData.reduce((total, item) => total + (item.calories || 0), 0);
+
+  useEffect(() => {
+    console.log("Meal data received in MealBox:", mealData);
+  }, [mealData]); // Dependencies array ensures this only re-runs if mealData changes
 
   return (
     <View className="w-11/12 mb-4 relative">
@@ -40,7 +59,7 @@ const MealBox = ({ title }) => {
 
       {expanded && (
         <View className="rounded-lg bg-lgt-gray p-4" style={{ elevation: 5 }}>
-          {content.map((item, index) => (
+          {combinedData.map((item, index) => (
             <View key={index} className="p-1 m-1 bg-lgt-gray flex flex-row justify-between items-center">
               <Text className="text-black text-base">{item.name}</Text>
               <Text className="text-black text-s">{item.calories} kcal</Text>
