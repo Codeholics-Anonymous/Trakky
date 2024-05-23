@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Text, View, TextInput, TouchableOpacity, Button } from 'react-native';
 
 export function AddingProduct({ navigation }) {
-  const token = ""; // token you get after login in 
+  const token = ""; // token you get after login in stored in this async shi*
 
   const handlePress = () => {
       axios.get('https://trakky.onrender.com/api/basic_demand/', {
