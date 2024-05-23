@@ -6,9 +6,9 @@ from user.models import UserProfile
 
 
 class Macros(models.Model):
-    protein = models.PositiveIntegerField(null=True, blank=True, default=0)
-    carbohydrates = models.PositiveIntegerField(null=True, blank=True, default=0)
-    fat = models.PositiveIntegerField(null=True, blank=True, default=0)
+    protein = models.FloatField(null=True, blank=True, default=0, validators=[MinValueValidator(0)])
+    carbohydrates = models.FloatField(null=True, blank=True, default=0, validators=[MinValueValidator(0)])
+    fat = models.FloatField(null=True, blank=True, default=0, validators=[MinValueValidator(0)])
 
     class Meta:
         abstract = True
@@ -23,13 +23,13 @@ class Macros(models.Model):
 
 class Product(Macros):
     product_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField(blank=True, null=True) # foreign key to user_id at django User class
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=250, blank=False, null=False)
 
     @property
     def calories_per_hundred_grams(self):
         if (self.protein is not None) and (self.carbohydrates is not None) and (self.fat is not None):
-            return 4 * self.protein + 4 * self.carbohydrates + 9 * self.fat
+            return round(4 * self.protein + 4 * self.carbohydrates + 9 * self.fat)
 
     @classmethod
     def add_product(cls, user_id, name, protein, carbohydrates, fat):
@@ -38,17 +38,13 @@ class Product(Macros):
         return new_product
 
     @classmethod
-    def update_product(cls, product_id, new_name, new_protein, new_carbohydrates, new_fat):
-        try:
-            product = cls.objects.get(product_id=product_id)
-            product.name = new_name
-            product.protein = new_protein
-            product.carbohydrates = new_carbohydrates
-            product.fat = new_fat
-            product.save()
-            return product
-        except cls.DoesNotExist:
-            return None
+    def update_product(cls, product, name, protein, carbohydrates, fat):
+        product.name = name
+        product.protein = protein
+        product.carbohydrates = carbohydrates
+        product.fat = fat
+        product.save()
+        return product
 
     @classmethod
     def calculate_nutrition(cls, gram_amount, product): # calculate nutrition basing on different amount (g) of product
@@ -57,14 +53,14 @@ class Product(Macros):
 
 class Demand(Macros):
     demand_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField(blank=True, null=True)
-    daily_calory_demand = models.PositiveIntegerField(null=False, blank=False, validators=[MaxValueValidator(12250)], default=0)
+    userprofile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, blank=True, null=True)
+    daily_calory_demand = models.PositiveIntegerField(null=False, blank=False, validators=[MaxValueValidator(12250)])
     date = models.DateField(null=True, blank=True)
-
+    
     @classmethod
-    def update_calories(cls, user_id, protein, fat, carbohydrates, daily_calory_demand):
+    def update_calories(cls, userprofile_id, protein, fat, carbohydrates, daily_calory_demand):
         try:
-            demand = cls.objects.get(user_id=user_id, date=date.today())
+            demand = cls.objects.filter(userprofile_id=userprofile_id, date=date.today()).order_by('-demand_id').first() 
             demand.protein = protein
             demand.fat = fat
             demand.carbohydrates = carbohydrates
@@ -75,9 +71,9 @@ class Demand(Macros):
             return None
 
     @classmethod
-    def create_demand(cls, user_id, date, protein, carbohydrates, fat, daily_calory_demand):
+    def create_demand(cls, userprofile_id, date, protein, carbohydrates, fat, daily_calory_demand):
         new_demand = cls(
-            user_id=user_id,
+            userprofile_id=userprofile_id,
             date=date,
             protein=protein,
             carbohydrates=carbohydrates,
@@ -89,45 +85,48 @@ class Demand(Macros):
 
 class Summary(Macros):
     summary_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField(null=False, blank=False)
-    daily_calory_intake = models.PositiveIntegerField()
+    userprofile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, null=True, blank=True)
+    daily_calory_intake = models.PositiveIntegerField(null=False, blank=False)
     date = models.DateField()
 
     @classmethod
-    def update_calories(cls, user_id, increase, fat, protein, carbohydrates, date):
+    def update_calories(cls, userprofile_id, increase, fat, protein, carbohydrates, date):
         try:
-            summary = cls.objects.get(user_id=user_id, date=date)
-            change = (protein * 4) + (carbohydrates * 4) + (fat * 9)
+            summary = cls.objects.get(userprofile_id=userprofile_id, date=date)
+            change = round((protein * 4) + (carbohydrates * 4) + (fat * 9))
             if increase:
-                summary.daily_calory_intake += change
-                summary.protein += protein
-                summary.carbohydrates += carbohydrates
-                summary.fat += fat
+                summary.daily_calory_intake = round(summary.daily_calory_intake + change, 1)
+                summary.protein = round(summary.protein + protein, 1)
+                summary.carbohydrates = round(summary.carbohydrates + carbohydrates, 1)
+                summary.fat = round(summary.fat + fat, 1)
             else:
-                summary.daily_calory_intake -= change
-                summary.protein -= protein
-                summary.carbohydrates -= carbohydrates
-                summary.fat -= fat
+                summary.daily_calory_intake = round(summary.daily_calory_intake - change, 1)
+                summary.protein = round(summary.protein - protein, 1)
+                summary.carbohydrates = round(summary.carbohydrates - carbohydrates, 1)
+                summary.fat = round(summary.fat - fat, 1)
             summary.save()
             return summary
         except cls.DoesNotExist:
             return None
 
     @classmethod
-    def create_summary(cls, user_id, date, fat=0, protein=0, carbohydrates=0):
-        calories = (protein * 4) + (carbohydrates * 4) + (fat * 9)
+    def create_summary(cls, userprofile_id, date, fat=0, protein=0, carbohydrates=0):
+        calories = round((protein * 4) + (carbohydrates * 4) + (fat * 9))
 
         new_summary = cls(
-            user_id=user_id,
+            userprofile_id=userprofile_id,
             date=date,
-            daily_calory_intake=calories
+            daily_calory_intake=calories,
+            protein=protein,
+            carbohydrates=carbohydrates,
+            fat=fat
         )
         new_summary.save()
         return new_summary
 
 class Meal(models.Model):
     meal_id = models.AutoField(primary_key=True)
-    user_id = models.IntegerField(null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     type = models.CharField(max_length=250)
     date = models.DateField()
 
@@ -139,9 +138,9 @@ class Meal(models.Model):
 
 class MealItem(models.Model):
     meal_item_id = models.AutoField(primary_key=True)
-    meal_id = models.IntegerField(null=True, blank=True)
-    product_id = models.IntegerField(null=False, blank=False)
-    gram_amount = models.PositiveIntegerField(null=False, blank=False, validators=[MinValueValidator(1)])
+    meal = models.ForeignKey(Meal, on_delete=models.CASCADE, null=True, blank=True)
+    product_id = models.PositiveIntegerField(null=False, blank=False)
+    gram_amount = models.PositiveIntegerField(null=False, blank=False, validators=[MinValueValidator(1), MaxValueValidator(2000)])
 
     @classmethod
     def add_product(cls, meal_id, product_id, gram_amount):
@@ -151,4 +150,4 @@ class MealItem(models.Model):
 
     @classmethod
     def remove_product(cls, id):
-        return MealItem.objects.get(meal_item_id=id).delete()
+        return cls.objects.get(meal_item_id=id).delete()

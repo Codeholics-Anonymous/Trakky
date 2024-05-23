@@ -3,15 +3,15 @@ from .models import (Macros, Product, Demand, Summary, Meal, MealItem)
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('product_id', 'user_id', 'name', 'calories_per_hundred_grams', 'protein', 'fat', 'carbohydrates')
+    list_display = ('product_id', 'user_id', 'name', 'calories_per_hundred_grams', 'protein', 'carbohydrates', 'fat')
 
 @admin.register(Demand)
 class DemandAdmin(admin.ModelAdmin):
-    list_display = ('demand_id', 'user_id', 'date', 'protein', 'carbohydrates', 'fat','daily_calory_demand')
+    list_display = ('demand_id', 'userprofile_id', 'date', 'protein', 'carbohydrates', 'fat','daily_calory_demand')
 
 @admin.register(Summary)
 class SummaryAdmin(admin.ModelAdmin):
-    list_display = ('summary_id', 'user_id', 'date', 'daily_calory_intake', 'protein', 'carbohydrates', 'fat')
+    list_display = ('summary_id', 'userprofile_id', 'date', 'daily_calory_intake', 'protein', 'carbohydrates', 'fat')
 
 @admin.register(Meal)
 class MealAdmin(admin.ModelAdmin):
