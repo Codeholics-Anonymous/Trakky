@@ -50,9 +50,9 @@ export function UserDetails({ route, navigation }) {
         user_goal: userProfileData.userGoal
       }
     })
-    .then((response) => {
+    .then(async (response) => {
       Alert.alert("Singed In successfully")
-      saveUserData(response.data.token, response.data.user.username);
+      await saveUserData(response.data.token, response.data.user.username);
 
       navigation.reset({
         index: 0,
@@ -60,8 +60,6 @@ export function UserDetails({ route, navigation }) {
       });
     })
     .catch((error) => {
-      // Handle error response
-      console.error(error);
       navigation.pop();
       Alert.alert("Error", "Something went wrong. Please try again.");
     });

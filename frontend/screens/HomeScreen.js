@@ -4,9 +4,8 @@ import DateDisplay from '../components/DateDisplay.js';
 import Header from '../components/Header.js';
 import MealBox from '../components/MealBox.js';
 import ProgressCircle from '../components/ProgressCircle.js';
-import { getUserData } from '../utils/Auth'
 
-export function HomeScreen() {
+export function HomeScreen({navigation}) {
   const [showDefaultProgress, setShowDefaultProgress] = useState(true);
 
   const toggleProgress = () => {
@@ -22,7 +21,7 @@ export function HomeScreen() {
   return (
     <SafeAreaView className="bg-light-green flex-1" style={{ flex: 1, paddingTop: StatusBar.currentHeight }}>
       <ScrollView className="w-full" contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
-        <Header />
+        <Header navigation={navigation}/>
         <ProgressCircle />
         <DateDisplay />
         <MealBox title="Breakfast" />
