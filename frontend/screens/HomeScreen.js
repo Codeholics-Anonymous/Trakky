@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, StatusBar } from 'react-native';
-import DateDisplay from '../components/DateDisplay.js';
-import Header from '../components/Header.js';
-import MealBox from '../components/MealBox.js';
-import ProgressCircle from '../components/ProgressCircle.js';
+import DateDisplay from '../components/DateDisplay';
+import Header from '../components/Header';
+import MealBox from '../components/MealBox';
+import { MealDataProvider } from '../components/MealDataContext'; // Adjust path as necessary
+import ProgressCircle from '../components/ProgressCircle';
 
-export function HomeScreen() {
+export function HomeScreen({ navigation }) {
   const [showDefaultProgress, setShowDefaultProgress] = useState(true);
 
   const toggleProgress = () => {
@@ -14,21 +15,22 @@ export function HomeScreen() {
   };
 
   useEffect(() => {
-    StatusBar.setBackgroundColor('#363636', true); // 'true' to animate the color transition, color dark-grey
-    StatusBar.setBarStyle('light-content', true); // changes the color of the status bar items to light
+    StatusBar.setBackgroundColor('#363636', true);
+    StatusBar.setBarStyle('light-content', true);
   }, []);
 
   return (
-    <SafeAreaView className="bg-light-green flex-1" style={{ flex: 1, paddingTop: StatusBar.currentHeight }}>
-      <ScrollView className="w-full" contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
-        <Header />
-        <ProgressCircle />
-        <DateDisplay />
-        <MealBox title="Breakfast" />
-        <MealBox title="Brunch" />
-        <MealBox title="Lunch" />
-        <MealBox title="Dinner" />
-      </ScrollView>
-    </SafeAreaView>
+    <MealDataProvider>
+      <SafeAreaView className="bg-light-green flex-1" style={{ flex: 1, paddingTop: StatusBar.currentHeight }}>
+        <ScrollView className="w-full" contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
+          <Header navigation={navigation}/>
+          <ProgressCircle />
+          <DateDisplay />
+          <MealBox title="Breakfast" />
+          <MealBox title="Lunch" />
+          <MealBox title="Dinner" />
+        </ScrollView>
+      </SafeAreaView>
+    </MealDataProvider>
   );
-};
+}
