@@ -23,7 +23,7 @@ export function Login( {navigation} ) {
       username: credentials.login,
       password: credentials.password
     })
-    .then(async (response) =>{
+    .then((response) =>{
       const {token, user} = response.data;
       saveUserData(token, user.username);
       navigation.replace("HomeScreen")
