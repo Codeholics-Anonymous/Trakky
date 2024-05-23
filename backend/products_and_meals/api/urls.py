@@ -16,7 +16,9 @@ from products_and_meals.api.views import (
                 api_detail_basic_demand_view,
                 api_create_demand_view,
                 #MEAL
-                api_detail_meal_view,
+                api_detail_breakfast_meal_view,
+                api_detail_lunch_meal_view,
+                api_detail_dinner_meal_view,
                 #MEAL ITEM
                 api_detail_meal_item_view,
                 api_update_meal_item_view,
@@ -45,7 +47,9 @@ urlpatterns = [
     path('demand/<str:starting_date>/<str:ending_date>/', api_detail_demand_view, name='demand_detail'),
     path('create_demand/', api_create_demand_view, name='demand_create'),
     #MEAL
-    path('meal/<str:date>/', api_detail_meal_view, name='meal_detail'),
+    path('meal/breakfast/<str:date>/', api_detail_breakfast_meal_view),
+    path('meal/lunch/<str:date>/', api_detail_lunch_meal_view),
+    path('meal/dinner/<str:date>/', api_detail_dinner_meal_view),
     #MEAL ITEM
     path('mealitem/<int:meal_item_id>/', api_detail_meal_item_view, name='meal_item_detail'),
     path('mealitem/<int:meal_item_id>/update/', api_update_meal_item_view, name='meal_item_update'),
