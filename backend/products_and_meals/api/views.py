@@ -359,69 +359,55 @@ def api_create_demand_view(request):
 
 # MEAL VIEWS
 
-# returns information about each meal from selected day with all mealitems included
-@api_view(['GET'])
-@authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def api_detail_meal_view(request, date):
+def get_meal(user_id, request_data, date, type):
+    # find meal_id from selected date
     try:
-        meal = Meal.objects.filter(user_id=request.user.id, date=date)
+        meal_id = Meal.objects.get(user_id=user_id, date=date, type=type).meal_id
     except Meal.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return short_response("message", "meal does not exist", status.HTTP_404_NOT_FOUND)
 
-    # find mealitems added by user at this date
+    # find all mealitems added to found meal
+    mealitems = MealItem.objects.filter(meal_id=meal_id)
 
-    query = Q()
-
-    for x in meal:
-        query = Q(meal_id=x.meal_id) | query
-
-    mealitems = MealItem.objects.filter(query)
-
-    # now get from this information all products info
-
-    breakfast_meal_id = lunch_meal_id = dinner_meal_id = None
-
-    for x in meal:
-        if (x.type=='breakfast'):
-            breakfast_meal_id = x.meal_id
-        elif (x.type=='lunch'):
-            lunch_meal_id = x.meal_id
-        elif (x.type=='dinner'):
-            dinner_meal_id = x.meal_id
-
-    data = {
-        'breakfast' : {},
-        'lunch' : {},
-        'dinner' : {}
-    }
-
-    i = j = k = 0 # iterators to add products named as product0, product1, ...
-
+    final_data = {}
+    product_data = {}
+    i = 0
+    
     for x in mealitems:
-        product = Product.objects.get(product_id=x.product_id) # get product from database
-        product_macros_info = Product.calculate_nutrition(gram_amount=x.gram_amount, product=product) # calculate macros per gram_amount
-        product_info = {
+        product = Product.objects.get(product_id=x.product_id)
+        product_macros = Product.calculate_nutrition(x.gram_amount, product)
+        product_data = {
             'mealitem_id' : x.meal_item_id,
             'product_id' : product.product_id,
             'name' : product.name,
-            'protein' : round(product_macros_info[0], 1),
-            'carbohydrates' : round(product_macros_info[1], 1),
-            'fat' : round(product_macros_info[2], 1),
-            'calories' : round(product_macros_info[0]*4+product_macros_info[1]*4+product_macros_info[2]*9),
-            'grams' : x.gram_amount
+            'calories' : 4*product_macros[0]+4*product_macros[1]+9*product_macros[2],
+            'grams' : x.gram_amount,
+            'protein' : product_macros[0],
+            'carbohydrates' : product_macros[1],
+            'fat' : product_macros[2],
         }
-        if (breakfast_meal_id is not None) and (x.meal_id == breakfast_meal_id):
-            data['breakfast'][f'product{i}'] = product_info
-            i += 1
-        elif (lunch_meal_id is not None) and (x.meal_id == lunch_meal_id):
-            data['lunch'][f'product{j}'] = product_info
-            j += 1
-        if (dinner_meal_id is not None) and (x.meal_id == dinner_meal_id):
-            data['dinner'][f'product{k}'] = product_info
-            k += 1
+        final_data[f'product{i}'] = product_data
+        i += 1
 
-    return Response(data, status=status.HTTP_200_OK) 
+    return Response(final_data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_detail_breakfast_meal_view(request, date):
+    return get_meal(request.user.id, request.data, date, "breakfast")
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_detail_lunch_meal_view(request, date):
+    return get_meal(request.user.id, request.data, date, "lunch")
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_detail_dinner_meal_view(request, date):
+    return get_meal(request.user.id, request.data, date, "dinner")
     
 # MEALITEM VIEWS
 
