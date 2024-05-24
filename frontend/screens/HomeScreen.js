@@ -19,16 +19,22 @@ export function HomeScreen({ navigation }) {
     StatusBar.setBarStyle('light-content', true);
   }, []);
 
+  const [howMuchEaten, sethowMuchEaten] = useState({
+    protein: 0,
+    carb : 0,
+    fat: 0
+  })
+
   return (
     <MealDataProvider>
       <SafeAreaView className="bg-light-green flex-1" style={{ flex: 1, paddingTop: StatusBar.currentHeight }}>
         <ScrollView className="w-full" contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
           <Header navigation={navigation}/>
-          <ProgressCircle />
+          <ProgressCircle howMuchEaten={howMuchEaten}/>
           <DateDisplay />
-          <MealBox title="Breakfast" />
-          <MealBox title="Lunch" />
-          <MealBox title="Dinner" />
+          <MealBox title="Breakfast" howMuchEaten={howMuchEaten} />
+          <MealBox title="Lunch" howMuchEaten={howMuchEaten} />
+          <MealBox title="Dinner" howMuchEaten={howMuchEaten} />
         </ScrollView>
       </SafeAreaView>
     </MealDataProvider>
