@@ -10,8 +10,8 @@ const { width } = Dimensions.get('window');
 
 const DateDisplay = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [date, setDate] = useState(new Date());
-  const { setMealData } = useMealData();
+  const { date, setDate, setMealData } = useMealData(); // Use date from context
+
 
   const fetchData = async (selectedDate) => {
     const token = await AsyncStorage.getItem('token');
