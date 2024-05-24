@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { CircularProgressBase } from 'react-native-circular-progress-indicator';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { useMealData } from './MealDataContext';
+import { getUserData } from '../utils/Auth';
+import axios from 'axios';
 
 const commonProps = {
   activeStrokeWidth: 25,
@@ -65,18 +67,49 @@ const ProgressCircles = () => {
     setDate(nextDay);
   };
 
-  const kcalCurrent = 7777;
-  const kcalTotal = 9999;
+  const kcalCurrent = 111;
   const carbCurrent = 100;
-  const carbTotal = 150;
   const fatCurrent = 100;
-  const fatTotal = 150;
   const proteinCurrent = 100;
-  const proteinTotal = 150;
+
+  const [total, setTotal] = useState({
+    kcalTotal : 0,
+    carbTotal : 0,
+    fatTotal : 0,
+    proteinTotal: 0
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { token } = await getUserData(); // Make sure getUserData() is defined and returns an object with token
+        const response = await axios.get('https://trakky.onrender.com/api/basic_demand/', {
+          headers: {
+            Authorization: 'Token ' + token,
+          },
+        });
+        
+        const { demand, protein, carbohydrates, fat } = response.data;
+
+        setTotal({
+          kcalTotal: demand,
+          carbTotal: carbohydrates,
+          fatTotal: fat,
+          proteinTotal: protein,
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const toggleProgress = () => {
     setShowDefaultProgress(!showDefaultProgress);
   };
+
+
 
   return (
     <View className="flex-row items-center justify-between w-full px-6 mt-8 mb-3" style={{ height: height * 0.31 }}>
@@ -86,15 +119,15 @@ const ProgressCircles = () => {
 
       <TouchableOpacity onPress={toggleProgress}>
         {showDefaultProgress ? (
-          <SingleCircle kcalCurrent={kcalCurrent} kcalTotal={kcalTotal} />
+          <SingleCircle kcalCurrent={kcalCurrent} kcalTotal={total.kcalTotal} />
         ) : (
           <NestedCircles
             carbCurrent={carbCurrent}
-            carbTotal={carbTotal}
+            carbTotal={total.carbTotal}
             fatCurrent={fatCurrent}
-            fatTotal={fatTotal}
+            fatTotal={total.fatTotal}
             proteinCurrent={proteinCurrent}
-            proteinTotal={proteinTotal}
+            proteinTotal={total.proteinTotal}
           />
         )}
       </TouchableOpacity>
