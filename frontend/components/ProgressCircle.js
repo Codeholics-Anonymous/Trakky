@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { CircularProgressBase } from 'react-native-circular-progress-indicator';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import { useMealData } from './MealDataContext';
 
 const commonProps = {
   activeStrokeWidth: 25,
@@ -50,6 +51,19 @@ const NestedCircles = ({ carbCurrent, carbTotal, fatCurrent, fatTotal, proteinCu
 const ProgressCircles = () => {
   const { height } = useWindowDimensions();
   const [showDefaultProgress, setShowDefaultProgress] = useState(true);
+  const { date, setDate } = useMealData(); // Use date from context
+
+  const goPreviousDay = () => {
+    const previousDay = new Date(date);
+    previousDay.setDate(date.getDate() - 1);
+    setDate(previousDay);
+  };
+
+  const goNextDay = () => {
+    const nextDay = new Date(date);
+    nextDay.setDate(date.getDate() + 1);
+    setDate(nextDay);
+  };
 
   const kcalCurrent = 7777;
   const kcalTotal = 9999;
@@ -66,7 +80,7 @@ const ProgressCircles = () => {
 
   return (
     <View className="flex-row items-center justify-between w-full px-6 mt-8 mb-3" style={{ height: height * 0.31 }}>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={goPreviousDay}>
         <FontAwesome5 name="angle-left" className="text-7xl transform text-gray" />
       </TouchableOpacity>
 
@@ -85,7 +99,7 @@ const ProgressCircles = () => {
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity>
+      <TouchableOpacity onPress={goNextDay}>
         <FontAwesome5 name="angle-right" className="text-7xl h-1.2 transform text-gray" />
       </TouchableOpacity>
     </View>
