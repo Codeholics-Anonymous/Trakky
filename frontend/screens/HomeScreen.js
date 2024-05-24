@@ -7,28 +7,27 @@ import { MealDataProvider } from '../components/MealDataContext'; // Adjust path
 import ProgressCircle from '../components/ProgressCircle';
 
 export function HomeScreen({ navigation }) {
-  const [showDefaultProgress, setShowDefaultProgress] = useState(true);
-
-  const toggleProgress = () => {
-    console.log('Toggle pressed');
-    setShowDefaultProgress(!showDefaultProgress);
-  };
-
   useEffect(() => {
     StatusBar.setBackgroundColor('#363636', true);
     StatusBar.setBarStyle('light-content', true);
   }, []);
+
+  const [howMuchEaten, sethowMuchEaten] = useState({
+    protein: 0,
+    carb : 0,
+    fat: 0
+  })
 
   return (
     <MealDataProvider>
       <SafeAreaView className="bg-light-green flex-1" style={{ flex: 1, paddingTop: StatusBar.currentHeight }}>
         <ScrollView className="w-full" contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
           <Header navigation={navigation}/>
-          <ProgressCircle />
+          <ProgressCircle howMuchEaten={howMuchEaten}/>
           <DateDisplay />
-          <MealBox title="Breakfast" />
-          <MealBox title="Lunch" />
-          <MealBox title="Dinner" />
+          <MealBox title="Breakfast" howMuchEaten={sethowMuchEaten} />
+          <MealBox title="Lunch" howMuchEaten={sethowMuchEaten} />
+          <MealBox title="Dinner" howMuchEaten={sethowMuchEaten} />
         </ScrollView>
       </SafeAreaView>
     </MealDataProvider>

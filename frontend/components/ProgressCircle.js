@@ -50,7 +50,7 @@ const NestedCircles = ({ carbCurrent, carbTotal, fatCurrent, fatTotal, proteinCu
   );
 };
 
-const ProgressCircles = () => {
+const ProgressCircles = ({howMuchEaten}) => {
   const { height } = useWindowDimensions();
   const [showDefaultProgress, setShowDefaultProgress] = useState(true);
   const { date, setDate } = useMealData(); // Use date from context
@@ -66,11 +66,6 @@ const ProgressCircles = () => {
     nextDay.setDate(date.getDate() + 1);
     setDate(nextDay);
   };
-
-  const kcalCurrent = 111;
-  const carbCurrent = 100;
-  const fatCurrent = 100;
-  const proteinCurrent = 100;
 
   const [total, setTotal] = useState({
     kcalTotal : 0,
@@ -119,14 +114,14 @@ const ProgressCircles = () => {
 
       <TouchableOpacity onPress={toggleProgress}>
         {showDefaultProgress ? (
-          <SingleCircle kcalCurrent={kcalCurrent} kcalTotal={total.kcalTotal} />
+          <SingleCircle kcalCurrent={howMuchEaten.protein * 4 + howMuchEaten.carb * 4 + howMuchEaten.fat * 9} kcalTotal={total.kcalTotal} />
         ) : (
           <NestedCircles
-            carbCurrent={carbCurrent}
+            carbCurrent={howMuchEaten.carbTotal}
             carbTotal={total.carbTotal}
-            fatCurrent={fatCurrent}
+            fatCurrent={howMuchEaten.fat}
             fatTotal={total.fatTotal}
-            proteinCurrent={proteinCurrent}
+            proteinCurrent={howMuchEaten.protein}
             proteinTotal={total.proteinTotal}
           />
         )}
