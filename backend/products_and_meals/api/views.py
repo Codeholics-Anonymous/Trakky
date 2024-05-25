@@ -217,7 +217,11 @@ def api_create_product_for_all_view(request):
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_detail_summary_view(request, starting_date, ending_date):
-    userprofile_id = UserProfile.objects.get(user_id=request.user.id).userprofile_id
+    try:
+        userprofile_id = UserProfile.objects.get(user_id=request.user.id).userprofile_id
+    except UserProfile.DoesNotExist:
+        return short_response("message", "user profile does not exist.", status.HTTP_404_NOT_FOUND)
+    
     summaries = Summary.objects.filter(userprofile_id=userprofile_id, date__range=(starting_date, ending_date))
 
     d_start = datetime.strptime(starting_date, "%Y-%m-%d")
@@ -408,6 +412,70 @@ def api_detail_lunch_meal_view(request, date):
 @permission_classes([IsAuthenticated])
 def api_detail_dinner_meal_view(request, date):
     return get_meal(request.user.id, request.data, date, "dinner")
+
+# returns information about each meal from selected day with all mealitems included
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_detail_meal_view(request, date):
+    try:
+        meal = Meal.objects.filter(user_id=request.user.id, date=date)
+    except Meal.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    # find mealitems added by user at this date
+
+    query = Q()
+
+    for x in meal:
+        query = Q(meal_id=x.meal_id) | query
+
+    mealitems = MealItem.objects.filter(query)
+
+    # now get from this information all products info
+
+    breakfast_meal_id = lunch_meal_id = dinner_meal_id = None
+
+    for x in meal:
+        if (x.type=='breakfast'):
+            breakfast_meal_id = x.meal_id
+        elif (x.type=='lunch'):
+            lunch_meal_id = x.meal_id
+        elif (x.type=='dinner'):
+            dinner_meal_id = x.meal_id
+
+    data = {
+        'breakfast' : {},
+        'lunch' : {},
+        'dinner' : {}
+    }
+
+    i = j = k = 0 # iterators to add products named as product0, product1, ...
+
+    for x in mealitems:
+        product = Product.objects.get(product_id=x.product_id) # get product from database
+        product_macros_info = Product.calculate_nutrition(gram_amount=x.gram_amount, product=product) # calculate macros per gram_amount
+        product_info = {
+            'mealitem_id' : x.meal_item_id,
+            'product_id' : product.product_id,
+            'name' : product.name,
+            'protein' : round(product_macros_info[0], 1),
+            'carbohydrates' : round(product_macros_info[1], 1),
+            'fat' : round(product_macros_info[2], 1),
+            'calories' : round(product_macros_info[0]*4+product_macros_info[1]*4+product_macros_info[2]*9),
+            'grams' : x.gram_amount
+        }
+        if (breakfast_meal_id is not None) and (x.meal_id == breakfast_meal_id):
+            data['breakfast'][f'product{i}'] = product_info
+            i += 1
+        elif (lunch_meal_id is not None) and (x.meal_id == lunch_meal_id):
+            data['lunch'][f'product{j}'] = product_info
+            j += 1
+        if (dinner_meal_id is not None) and (x.meal_id == dinner_meal_id):
+            data['dinner'][f'product{k}'] = product_info
+            k += 1
+
+    return Response(data, status=status.HTTP_200_OK) 
     
 # MEALITEM VIEWS
 
