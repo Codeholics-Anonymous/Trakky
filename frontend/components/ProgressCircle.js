@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { CircularProgressBase } from 'react-native-circular-progress-indicator';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import { useMealData } from './MealDataContext';
 import { getUserData } from '../utils/Auth';
-import axios from 'axios';
+import { useMealData } from './MealDataContext';
 
 const commonProps = {
   activeStrokeWidth: 25,
@@ -50,10 +50,10 @@ const NestedCircles = ({ carbCurrent, carbTotal, fatCurrent, fatTotal, proteinCu
   );
 };
 
-const ProgressCircles = ({howMuchEaten}) => {
+const ProgressCircles = () => {
   const { height } = useWindowDimensions();
   const [showDefaultProgress, setShowDefaultProgress] = useState(true);
-  const { date, setDate } = useMealData(); // Use date from context
+  const { mealData, date, setDate } = useMealData(); // Use mealData and date from context
 
   const goPreviousDay = () => {
     const previousDay = new Date(date);
@@ -68,10 +68,17 @@ const ProgressCircles = ({howMuchEaten}) => {
   };
 
   const [total, setTotal] = useState({
-    kcalTotal : 0,
-    carbTotal : 0,
-    fatTotal : 0,
+    kcalTotal: 0,
+    carbTotal: 0,
+    fatTotal: 0,
     proteinTotal: 0
+  });
+
+  const [current, setCurrent] = useState({
+    kcalCurrent: 0,
+    carbCurrent: 0,
+    fatCurrent: 0,
+    proteinCurrent: 0
   });
 
   useEffect(() => {
@@ -100,11 +107,37 @@ const ProgressCircles = ({howMuchEaten}) => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const calculateCurrentValues = () => {
+      let kcalCurrent = 0;
+      let carbCurrent = 0;
+      let fatCurrent = 0;
+      let proteinCurrent = 0;
+
+      Object.keys(mealData).forEach(mealType => {
+        const mealItems = mealData[mealType];
+        Object.values(mealItems).forEach(item => {
+          kcalCurrent += item.calories || 0;
+          carbCurrent += item.carbohydrates || 0;
+          fatCurrent += item.fat || 0;
+          proteinCurrent += item.protein || 0;
+        });
+      });
+
+      setCurrent({
+        kcalCurrent,
+        carbCurrent,
+        fatCurrent,
+        proteinCurrent,
+      });
+    };
+
+    calculateCurrentValues();
+  }, [mealData]);
+
   const toggleProgress = () => {
     setShowDefaultProgress(!showDefaultProgress);
   };
-
-
 
   return (
     <View className="flex-row items-center justify-between w-full px-6 mt-8 mb-3" style={{ height: height * 0.31 }}>
@@ -114,14 +147,14 @@ const ProgressCircles = ({howMuchEaten}) => {
 
       <TouchableOpacity onPress={toggleProgress}>
         {showDefaultProgress ? (
-          <SingleCircle kcalCurrent={howMuchEaten.protein * 4 + howMuchEaten.carb * 4 + howMuchEaten.fat * 9} kcalTotal={total.kcalTotal} />
+          <SingleCircle kcalCurrent={current.kcalCurrent} kcalTotal={total.kcalTotal} />
         ) : (
           <NestedCircles
-            carbCurrent={howMuchEaten.carbTotal}
+            carbCurrent={current.carbCurrent}
             carbTotal={total.carbTotal}
-            fatCurrent={howMuchEaten.fat}
+            fatCurrent={current.fatCurrent}
             fatTotal={total.fatTotal}
-            proteinCurrent={howMuchEaten.protein}
+            proteinCurrent={current.proteinCurrent}
             proteinTotal={total.proteinTotal}
           />
         )}
