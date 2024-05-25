@@ -7,7 +7,11 @@ const MealDataContext = createContext();
 export const useMealData = () => useContext(MealDataContext);
 
 export const MealDataProvider = ({ children }) => {
-  const [mealData, setMealData] = useState([]);
+  const [mealData, setMealData] = useState({
+    breakfast: {},
+    lunch: {},
+    dinner: {}
+  });
   const [date, setDate] = useState(new Date());
 
   const fetchData = async (selectedDate) => {
@@ -18,7 +22,7 @@ export const MealDataProvider = ({ children }) => {
         return;
       }
       const dateString = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
-      const url = `https://trakky.onrender.com/api/meal/breakfast/${dateString}`;
+      const url = `https://trakky.onrender.com/api/meal/${dateString}`;
 
       const response = await axios.get(url, {
         headers: {
@@ -26,7 +30,7 @@ export const MealDataProvider = ({ children }) => {
         }
       });
 
-      const meals = Array.isArray(response.data) ? response.data : [response.data];
+      const meals = response.data;
       setMealData(meals);
     } catch (error) {
       console.error("Error fetching meals:", error);

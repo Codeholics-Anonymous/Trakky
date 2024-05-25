@@ -23,11 +23,21 @@ const MealBox = ({ title }) => {
 
   // Helper function to flatten the data structure
   const flattenMealData = (data) => {
-    return data.map((item) => Object.values(item)[0]);
+    return Object.values(data).map(item => ({
+      name: item.name,
+      calories: item.calories,
+      protein: item.protein,
+      carbohydrates: item.carbohydrates,
+      fat: item.fat,
+      grams: item.grams,
+    }));
   };
 
+  // Filter the meal data based on the title of the MealBox
+  const filteredMealData = mealData[title.toLowerCase()] || {};
+
   // Flattened data for rendering
-  const flattenedData = flattenMealData(mealData);
+  const flattenedData = flattenMealData(filteredMealData);
 
   // Combined data from fetched and manually added products
   const combinedData = [...flattenedData, ...content];

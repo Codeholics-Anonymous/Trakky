@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { SafeAreaView, ScrollView, StatusBar } from 'react-native';
 import DateDisplay from '../components/DateDisplay';
 import Header from '../components/Header';
@@ -12,22 +12,16 @@ export function HomeScreen({ navigation }) {
     StatusBar.setBarStyle('light-content', true);
   }, []);
 
-  const [howMuchEaten, sethowMuchEaten] = useState({
-    protein: 0,
-    carb : 0,
-    fat: 0
-  })
-
   return (
     <MealDataProvider>
       <SafeAreaView className="bg-light-green flex-1" style={{ flex: 1, paddingTop: StatusBar.currentHeight }}>
         <ScrollView className="w-full" contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
           <Header navigation={navigation}/>
-          <ProgressCircle howMuchEaten={howMuchEaten}/>
+          <ProgressCircle/>
           <DateDisplay />
-          <MealBox title="Breakfast" howMuchEaten={sethowMuchEaten} />
-          <MealBox title="Lunch" howMuchEaten={sethowMuchEaten} />
-          <MealBox title="Dinner" howMuchEaten={sethowMuchEaten} />
+          <MealBox title="Breakfast"/>
+          <MealBox title="Lunch"/>
+          <MealBox title="Dinner"/>
         </ScrollView>
       </SafeAreaView>
     </MealDataProvider>
