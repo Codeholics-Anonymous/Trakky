@@ -201,6 +201,11 @@ def add_product(request_data, user_id):
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_create_product_view(request):
+    max_products_num = 100
+    # check if user has not exceeded maximum number of products that can be added by him
+    products = Product.objects.filter(user_id=request.user.id)
+    if (len(products) >= max_products_num):
+        return short_response("message", f"Maximum number of products that can be added ({max_products_num}) has been exceeded")
     return add_product(request_data=request.data, user_id=request.user.id)
 
 # VIEW TO ADD PRODUCT FOR ALL USERS (AVAILABLE ONLY FOR PRODUCT MANAGERS)
@@ -577,13 +582,21 @@ def create_mealitem(type, user_id, request_data, date):
         except Product.DoesNotExist:
             return short_response("message", "Product does not exist", status.HTTP_404_NOT_FOUND)
         # MEAL EXISTENCE
-        if not Meal.objects.filter(user_id=user_id, date=date, type=type).exists():
-            Meal.add_meal(user_id=user_id, type=type, date=date)
+        meal_id = None
+        meal_exists = Meal.objects.filter(user_id=user_id, date=date, type=type).exists()
+        # check upper limit for mealitems amount in single meal 
+        if meal_exists:
+            # check upper limit for mealitems amount
+            meal_id = Meal.objects.get(user_id=user_id, date=date, type=type).meal_id
+            mealitems = MealItem.objects.filter(meal_id=meal_id)
+            if len(mealitems) >= 50:
+                return short_response("message", "upper limit of products per meal exceeded", status.HTTP_400_BAD_REQUEST)
+        else:
+            meal_id = Meal.add_meal(user_id=user_id, type=type, date=date).meal_id
         # SUMMARY EXISTENCE
         if not Summary.objects.filter(userprofile_id=userprofile_id, date=date).exists():
             Summary.create_summary(userprofile_id=userprofile_id, date=date)
         # MEAL ITEM PART
-        meal_id = Meal.objects.get(user_id=user_id, date=date, type=type).meal_id # now we can get meal_id because we know that meal exists
         MealItem.add_product(meal_id=meal_id, product_id=product_to_add.product_id, gram_amount=serializer.validated_data['gram_amount'])
         # calculate product macros and calories (gram_amount of product can be different than 100)
         protein, carbohydrates, fat = Product.calculate_nutrition(gram_amount=serializer.validated_data['gram_amount'], product=product_to_add)
