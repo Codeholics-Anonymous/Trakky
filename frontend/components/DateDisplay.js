@@ -23,10 +23,10 @@ const DateDisplay = () => {
         onPress={() => setShowDatePicker(true)}
         className="rounded-lg flex-row p-1 bg-gray mt-4 mb-12 elevation-5 items-center justify-center"
       >
-        <Text style={{ color: 'black', fontSize: 16, marginLeft: 10 }}>
+        <Text className="text-black text-base">
           {date.toLocaleDateString()}
         </Text>
-        <FontAwesome name="calendar" className="text-black text-base pl-5 pr-2.5" />
+        <FontAwesome name="calendar" className="text-black text-base pl-3" />
       </TouchableOpacity>
 
       {showDatePicker && (
@@ -35,6 +35,7 @@ const DateDisplay = () => {
           mode="date"
           display="default"
           onChange={onDateChange}
+          maximumDate={new Date()} // Limit the maximum selectable date to today
         />
       )}
     </View>

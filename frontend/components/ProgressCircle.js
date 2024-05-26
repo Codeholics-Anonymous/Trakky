@@ -12,7 +12,7 @@ const commonProps = {
   inActiveStrokeOpacity: 1
 };
 
-const calculateProgress = (current, total) => (current / total) * 100;
+const calculateProgress = (current, total) => Math.min((current / total) * 100, 100);
 
 const SingleCircle = ({ kcalCurrent, kcalTotal }) => {
   const value = calculateProgress(kcalCurrent, kcalTotal);
@@ -30,17 +30,17 @@ const NestedCircles = ({ carbCurrent, carbTotal, fatCurrent, fatTotal, proteinCu
   const proteinValue = calculateProgress(proteinCurrent, proteinTotal);
 
   return (
-    <CircularProgressBase {...commonProps} value={carbValue} radius={135} activeStrokeColor={'#323232'} inActiveStrokeColor={'#aaaaaa'}>
+    <CircularProgressBase {...commonProps} value={carbValue} radius={135} activeStrokeColor={'#363636'} inActiveStrokeColor={'#aaaaaa'}>
       <CircularProgressBase {...commonProps} value={fatValue} radius={110} activeStrokeColor={'#F0E68C'} inActiveStrokeColor={'#aaaaaa'}>
         <CircularProgressBase {...commonProps} value={proteinValue} radius={85} activeStrokeColor={'#ffffff'} inActiveStrokeColor={'#aaaaaa'}>
           <View>
-            <Text className="text-white text-base font-bold">
+            <Text className="text-white text-small font-bold">
               C: {carbCurrent}g<Text className="text-lgt-gray">/{carbTotal}g</Text>
             </Text>
-            <Text className="text-white text-base font-bold">
+            <Text className="text-white text-small font-bold">
               F: {fatCurrent}g<Text className="text-lgt-gray">/{fatTotal}g</Text>
             </Text>
-            <Text className="text-white text-base font-bold">
+            <Text className="text-white text-small font-bold">
               P: {proteinCurrent}g<Text className="text-lgt-gray">/{proteinTotal}g</Text>
             </Text>
           </View>
@@ -55,6 +55,7 @@ const ProgressCircles = () => {
   const [showDefaultProgress, setShowDefaultProgress] = useState(true);
   const { mealData, date, setDate } = useMealData(); // Use mealData and date from context
 
+  // arrow buttons operations
   const goPreviousDay = () => {
     const previousDay = new Date(date);
     previousDay.setDate(date.getDate() - 1);
@@ -145,24 +146,30 @@ const ProgressCircles = () => {
         <FontAwesome5 name="angle-left" className="text-7xl transform text-gray" />
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={toggleProgress}>
-        {showDefaultProgress ? (
-          <SingleCircle kcalCurrent={current.kcalCurrent} kcalTotal={total.kcalTotal} />
-        ) : (
-          <NestedCircles
-            carbCurrent={current.carbCurrent}
-            carbTotal={total.carbTotal}
-            fatCurrent={current.fatCurrent}
-            fatTotal={total.fatTotal}
-            proteinCurrent={current.proteinCurrent}
-            proteinTotal={total.proteinTotal}
-          />
-        )}
-      </TouchableOpacity>
+      <View style={{ flex: 1, alignItems: 'center' }}>
+        <TouchableOpacity onPress={toggleProgress}>
+          {showDefaultProgress ? (
+            <SingleCircle kcalCurrent={current.kcalCurrent} kcalTotal={total.kcalTotal} />
+          ) : (
+            <NestedCircles
+              carbCurrent={current.carbCurrent}
+              carbTotal={total.carbTotal}
+              fatCurrent={current.fatCurrent}
+              fatTotal={total.fatTotal}
+              proteinCurrent={current.proteinCurrent}
+              proteinTotal={total.proteinTotal}
+            />
+          )}
+        </TouchableOpacity>
+      </View>
 
-      <TouchableOpacity onPress={goNextDay}>
-        <FontAwesome5 name="angle-right" className="text-7xl h-1.2 transform text-gray" />
-      </TouchableOpacity>
+      {date.toDateString() !== new Date().toDateString() ? (
+        <TouchableOpacity onPress={goNextDay}>
+          <FontAwesome5 name="angle-right" className="text-7xl h-1.2 transform text-gray" />
+        </TouchableOpacity>
+      ) : (
+        <View style={{ width: 36 }} /> // Placeholder to keep spacing consistent
+      )}
     </View>
   );
 };

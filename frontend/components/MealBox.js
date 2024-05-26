@@ -1,23 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import CommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useMealData } from './MealDataContext'; // Adjust path as necessary
 
 const MealBox = ({ title }) => {
   const [expanded, setExpanded] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const { mealData } = useMealData();
-  const [productName, setProductName] = useState('');
-  const [productCalories, setProductCalories] = useState('');
+  const { mealData, searchResults, searchProducts, searchError, createMealItem, date } = useMealData();
   const [content, setContent] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(''); // State for search query
+  const [gramAmount, setGramAmount] = useState(''); // State for gram amount
 
-  const addContent = () => {
-    if (productName && productCalories) {
-      const newProduct = { name: productName, calories: parseInt(productCalories) };
-      setContent([...content, newProduct]);
-      setProductName('');
-      setProductCalories('');
+  const addContent = (product) => {
+    if (product && gramAmount) {
+      const dateString = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+      createMealItem(title.toLowerCase(), dateString, product.product_id, parseInt(gramAmount));
       setModalVisible(false);
+      setGramAmount('');
     }
   };
 
@@ -88,25 +87,37 @@ const MealBox = ({ title }) => {
             <Text className="text-xl mb-4">Add Product</Text>
             <TextInput
               placeholder="Product Name"
-              value={productName}
-              onChangeText={setProductName}
-              className="border-b border-black mb-4"
+              value={searchQuery}
+              onChangeText={(text) => {
+                setSearchQuery(text);
+                searchProducts(text);
+              }}
+              className="border-b border-black mb-2"
             />
             <TextInput
-              placeholder="Calories"
-              value={productCalories}
-              onChangeText={setProductCalories}
+              placeholder="Gram Amount"
+              value={gramAmount}
+              onChangeText={setGramAmount}
               keyboardType="numeric"
-              className="border-b border-black mb-10"
+              className="border-b border-black mb-2"
             />
+            {searchError ? (
+              <Text className="text-red-500">{searchError}</Text>
+            ) : (
+              <ScrollView className="max-h-60">
+                {searchResults.map((product, index) => (
+                  <Pressable
+                    key={index}
+                    className="p-2 bg-white my-1 rounded-lg"
+                    onPress={() => addContent(product)}
+                  >
+                    <Text className="text-black">{product.name}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            )}
             <Pressable
-              className="bg-light-green rounded-lg p-2 mb-2"
-              onPress={addContent}
-            >
-              <Text className="text-white text-center">Add</Text>
-            </Pressable>
-            <Pressable
-              className="bg-dark-green rounded-lg p-2"
+              className="bg-dark-green rounded-lg p-2 mt-4"
               onPress={() => setModalVisible(false)}
             >
               <Text className="text-white text-center">Cancel</Text>
