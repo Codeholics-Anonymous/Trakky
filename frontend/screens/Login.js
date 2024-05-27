@@ -1,10 +1,12 @@
 import { Text, View, TextInput, TouchableOpacity, Button, Alert} from 'react-native';
 import { Logo250x250 } from '../components/Logo250x250';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { saveUserData } from '../utils/Auth'
+import LoadingScreen from './LoadingScreen';
 
-export function Login( {navigation} ) {
+export function Login( {navigation} ) {  
+  const [isLoading, setIsLoading] = useState(false);
   const [credentials, setCredentials] = useState({
     login: "", 
     password: ""
@@ -19,6 +21,7 @@ export function Login( {navigation} ) {
   };
 
   const handleSubmit = () => {
+    setIsLoading(true)
     axios.post(`https://trakky.onrender.com/login/`, {
       username: credentials.login,
       password: credentials.password
@@ -26,11 +29,17 @@ export function Login( {navigation} ) {
     .then(async (response) =>{
       const {token, user} = response.data;
       await saveUserData(token, user.username);
+      setIsLoading(false)
       navigation.replace("HomeScreen")
     }, (error) => {
+      setIsLoading(false)
       Alert.alert("Error, try again")
     })
   };
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <View className="bg-gray-100">

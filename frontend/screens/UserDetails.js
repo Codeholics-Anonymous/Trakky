@@ -5,8 +5,11 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
 import { useState } from 'react';
 import { saveUserData } from '../utils/Auth'
+import LoadingScreen from './LoadingScreen';
 
 export function UserDetails({ route, navigation }) {
+  const [isLoading, setIsLoading] = useState(false);
+
   const { login, password } = route.params;
 
   const [userProfileData, setUserProfileData] = useState({
@@ -35,7 +38,7 @@ export function UserDetails({ route, navigation }) {
 
   const handleSubmit = () => {
     const formattedBirthDate = formatDate(userProfileData.birthDate); // Assuming formatDate function exists as defined previously
-  
+    setIsLoading(true)
     axios.post(`https://trakky.onrender.com/register/`, {
       register_data: {
         username: login,
@@ -53,17 +56,22 @@ export function UserDetails({ route, navigation }) {
     .then(async (response) => {
       Alert.alert("Singed In successfully")
       await saveUserData(response.data.token, response.data.user.username);
-
+      setIsLoading(false)
       navigation.reset({
         index: 0,
         routes: [{name: 'HomeScreen'}]
       });
     })
     .catch((error) => {
+      setIsLoading(false)
       navigation.pop();
       Alert.alert("Error", "Something went wrong. Please try again.");
     });
   };
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <View className="bg-gray-100 flex min-h-full flex-col px-6 py-12 lg:px-8">

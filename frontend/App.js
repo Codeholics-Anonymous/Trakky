@@ -4,15 +4,16 @@ import { HomeScreen } from './screens/HomeScreen';
 import { Login } from './screens/Login';
 import { Register } from './screens/Register';
 import { UserDetails } from './screens/UserDetails';
-import { useEffect, useState } from 'react';
-import { hasUserData } from './utils/Auth';
+import { useState } from 'react';
 import { Settings } from './screens/Settings';
 import { SettingsUser } from './screens/SettingsUser'
 import { AddingProduct } from './screens/AddingProduct';
 const Stack = createNativeStackNavigator();
 
 function App() {
-/*
+  const [isLoading, setIsLoading] = useState(true);
+
+  /*
   const [isSignedIn, setIsSignedIn] = useState(false);
 
   useEffect(() => {
@@ -22,8 +23,7 @@ function App() {
     };
 
     checkUserData();
-  }, []);
-*/
+  }, []) */
 
   return (
     <NavigationContainer>
