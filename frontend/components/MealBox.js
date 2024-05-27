@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import CommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useMealData } from './MealDataContext'; // Adjust path as necessary
-
+import LoadingScreen from '../screens/LoadingScreen';
 const MealBox = ({ title }) => {
   const [expanded, setExpanded] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -10,6 +10,7 @@ const MealBox = ({ title }) => {
   const [content, setContent] = useState([]);
   const [searchQuery, setSearchQuery] = useState(''); // State for search query
   const [gramAmount, setGramAmount] = useState(''); // State for gram amount
+  const [isLoading, setIsLoading] = useState(false);
 
   const addContent = (product) => {
     if (product && gramAmount) {
@@ -45,8 +46,24 @@ const MealBox = ({ title }) => {
   const totalCalories = combinedData.reduce((total, item) => total + (item.calories || 0), 0);
 
   useEffect(() => {
-    console.log("Meal data received in MealBox:", mealData);
+    const fetchData = async () => {
+      setIsLoading(true);  // Set loading to true before fetching data
+      try {
+        // Simulate fetching data
+        console.log("Meal data received in MealBox:", mealData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setIsLoading(false);  // Set loading to false after fetching data
+      }
+    };
+
+    fetchData();
   }, [mealData]); // Dependencies array ensures this only re-runs if mealData changes
+  
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <View className="w-11/12 mb-4 relative">
