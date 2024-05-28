@@ -48,7 +48,7 @@ export function HomeScreen({ navigation }) {
         <ScrollView className="w-full" contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }}>
           <Header navigation={navigation}/>
           <ProgressCircle creationDate={creationDate} />
-          <DateDisplay />
+          <DateDisplay creationDate={creationDate} />
           <MealBox title="Breakfast"/>
           <MealBox title="Lunch"/>
           <MealBox title="Dinner"/>
