@@ -45,6 +45,9 @@ export function Settings({ navigation }) {
       <TouchableOpacity className='bg-light-green p-3 rounded-full shadow-xl shadow-dark-green my-4' onPress={() => {navigation.navigate("SettingsUser")}}>
         <Text className='text-center text-xl font-bold'>Change User Data</Text>
       </TouchableOpacity>
+      <TouchableOpacity className='bg-light-green p-3 rounded-full shadow-xl shadow-dark-green my-4' onPress={() => {navigation.navigate("CustomDemand")}}>
+        <Text className='text-center text-xl font-bold'>Setup Custom Demand</Text>
+      </TouchableOpacity>
       <TouchableOpacity className='bg-light-green p-3 rounded-full shadow-xl shadow-dark-green my-4' onPress={handleLogout}>
         <Text className='text-center text-xl font-bold'>Logout</Text>
       </TouchableOpacity>
