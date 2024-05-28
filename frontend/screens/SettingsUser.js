@@ -1,12 +1,13 @@
 import { Text, View, TextInput, TouchableOpacity, Button, Alert } from 'react-native';
-import { Logo250x250 } from '../components/Logo250x250';
 import { SelectList } from 'react-native-dropdown-select-list'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
 import { useState } from 'react';
-import { saveUserData } from '../utils/Auth'
+import { getUserData } from '../utils/Auth'
+import LoadingScreen from './LoadingScreen';
 
 export function SettingsUser({ navigation }) {
+  const [isLoading, setIsLoading] = useState(false);
 
   const [userProfileData, setUserProfileData] = useState({
     sex: "",
@@ -32,8 +33,47 @@ export function SettingsUser({ navigation }) {
     return `${year}-${month}-${day}`;
   };
 
-  const handleSubmit = () => {
-    navigation.pop();
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    try {
+      const { token } = await getUserData();
+      const config = {
+        headers: {
+          'Authorization': 'Token ' + token,
+        }
+      };
+      
+      axios.put('https://trakky.onrender.com/user/userprofile/update/', {
+        sex: userProfileData.sex,
+        birth_date: formatDate(userProfileData.birthDate),
+        work_type: userProfileData.workType,
+        weight: userProfileData.weight,
+        height: userProfileData.height,
+        user_goal: userProfileData.userGoal        
+      }, config)
+        .then(response => {
+          // Handle successful update, e.g., show a success message or update local state
+          console.log('Profile updated successfully');
+          setIsLoading(false);
+          navigation.reset({
+            index: 0,
+            routes: [{name: 'HomeScreen'}]
+          });
+        })
+        .catch(error => {
+          // Handle request errors
+          console.error('Error updating profile:', error, "1");
+        });
+    } catch (error) {
+      // Handle getUserData errors
+      console.error('Error getting user data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return <LoadingScreen />;
   }
 
   return (
@@ -99,11 +139,6 @@ export function SettingsUser({ navigation }) {
           }}
         />
       </View>
-      <View className="flex-1 justify-end items-center">
-        <TouchableOpacity onPress={() => navigation.navigate("HomeScreen")}>
-          <Text className="text-center text-xl text-dark-gray">Logout!</Text>
-        </TouchableOpacity>
-    </View>
     </View>
   );
 }
