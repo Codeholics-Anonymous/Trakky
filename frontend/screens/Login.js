@@ -2,8 +2,9 @@ import { Text, View, TextInput, TouchableOpacity, Button, Alert} from 'react-nat
 import { Logo250x250 } from '../components/Logo250x250';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { saveUserData } from '../utils/Auth'
+import { getUserData, saveUserData } from '../utils/Auth'
 import LoadingScreen from './LoadingScreen';
+import { hasUserData } from '../utils/Auth';
 
 export function Login( {navigation} ) {  
   const [isLoading, setIsLoading] = useState(false);
@@ -36,6 +37,22 @@ export function Login( {navigation} ) {
       Alert.alert("Error, try again")
     })
   };
+
+  useEffect(() => {
+    const checkIfLoggedIn = async () => {
+      setIsLoading(true);
+      const { username } = await getUserData();
+      const useHasData = await hasUserData();
+      setIsLoading(false);
+      if(useHasData) {
+        navigation.reset({
+          index: 0,
+          routes: [{name: 'HomeScreen'}]
+        });
+      }
+    }
+    checkIfLoggedIn();
+  }, [navigation])
 
   if (isLoading) {
     return <LoadingScreen />;
