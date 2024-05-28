@@ -5,6 +5,7 @@ import { CircularProgressBase } from 'react-native-circular-progress-indicator';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { getUserData } from '../utils/Auth';
 import { useMealData } from './MealDataContext';
+import LoadingScreen from '../screens/LoadingScreen';
 
 const commonProps = {
   activeStrokeWidth: 25,
@@ -51,6 +52,7 @@ const NestedCircles = ({ carbCurrent, carbTotal, fatCurrent, fatTotal, proteinCu
 };
 
 const ProgressCircles = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const { height } = useWindowDimensions();
   const [showDefaultProgress, setShowDefaultProgress] = useState(true);
   const { mealData, date, setDate } = useMealData(); // Use mealData and date from context
@@ -84,6 +86,7 @@ const ProgressCircles = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
         const { token } = await getUserData(); // Make sure getUserData() is defined and returns an object with token
         const response = await axios.get('https://trakky.onrender.com/api/basic_demand/', {
@@ -100,8 +103,10 @@ const ProgressCircles = () => {
           fatTotal: fat,
           proteinTotal: protein,
         });
+        setIsLoading(false);
       } catch (error) {
         console.error(error);
+        setIsLoading(false);
       }
     };
 
@@ -139,6 +144,10 @@ const ProgressCircles = () => {
   const toggleProgress = () => {
     setShowDefaultProgress(!showDefaultProgress);
   };
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <View className="flex-row items-center justify-between w-full px-6 mt-8 mb-3" style={{ height: height * 0.31 }}>
