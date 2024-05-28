@@ -97,9 +97,7 @@ const ProgressCircles = () => {
       try {
         const { token } = await getUserData(); // Make sure getUserData() is defined and returns an object with token
         const currDate = formatDate(date);
-        console.log("\n",currDate,"\n");
         const url = `https://trakky.onrender.com/api/demand/${currDate}/${currDate}/`;
-        console.log(url);
         const response = await axios.get(url, {
           headers: {
             Authorization: 'Token ' + token,
