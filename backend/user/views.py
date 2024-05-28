@@ -166,3 +166,17 @@ def api_update_userprofile_view(request):
     if (UserProfile.update_profile(serializer)):
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# find account creation date
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def api_get_account_creation_date_view(request):
+    try:
+        userprofile_id = UserProfile.objects.get(user_id=request.user.id)
+    except UserProfile.DoesNotExist:
+        return Response({'message', "Userprofile does not exist"}, status=status.HTTP_404_NOT_FOUND)
+    # get first demand - it contains account creation date
+    account_creation_date = find_first_demand(userprofile_id).date
+    return short_response("date", account_creation_date)
