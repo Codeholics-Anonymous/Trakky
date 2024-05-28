@@ -51,7 +51,9 @@ const NestedCircles = ({ carbCurrent, carbTotal, fatCurrent, fatTotal, proteinCu
   );
 };
 
-const ProgressCircles = () => {
+const ProgressCircles = ({creationDate}) => {
+  // is it dump or working, both....
+  const [isAccountCreatedDate, setisAccountCreatedDate] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { height } = useWindowDimensions();
   const [showDefaultProgress, setShowDefaultProgress] = useState(true);
@@ -92,6 +94,13 @@ const ProgressCircles = () => {
   };
 
   useEffect(() => {
+    // Sorry for idiotic use iam sleepy now 
+    if(formatDate(date) == creationDate) {
+      setisAccountCreatedDate(true);
+    } else {
+      setisAccountCreatedDate(false);
+    }
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
@@ -160,9 +169,10 @@ const ProgressCircles = () => {
 
   return (
     <View className="flex-row items-center justify-between w-full px-6 mt-8 mb-3" style={{ height: height * 0.31 }}>
+      {isAccountCreatedDate ? <View style={{ width: 36 }} /> : 
       <TouchableOpacity onPress={goPreviousDay}>
         <FontAwesome5 name="angle-left" className="text-7xl transform text-gray" />
-      </TouchableOpacity>
+      </TouchableOpacity> }
 
       <View style={{ flex: 1, alignItems: 'center' }}>
         <TouchableOpacity onPress={toggleProgress}>
