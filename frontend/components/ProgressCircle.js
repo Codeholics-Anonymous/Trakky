@@ -83,25 +83,36 @@ const ProgressCircles = () => {
     fatCurrent: 0,
     proteinCurrent: 0
   });
+  
+  const formatDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
         const { token } = await getUserData(); // Make sure getUserData() is defined and returns an object with token
-        const response = await axios.get('https://trakky.onrender.com/api/basic_demand/', {
+        const currDate = formatDate(date);
+        console.log("\n",currDate,"\n");
+        const url = `https://trakky.onrender.com/api/demand/${currDate}/${currDate}/`;
+        console.log(url);
+        const response = await axios.get(url, {
           headers: {
             Authorization: 'Token ' + token,
           },
         });
-        
-        const { demand, protein, carbohydrates, fat } = response.data;
+        console.log(response.data);
+        const { demand_calories_sum, demand_protein_sum, demand_carbohydrates_sum, demand_fat_sum } = response.data;
 
         setTotal({
-          kcalTotal: demand,
-          carbTotal: carbohydrates,
-          fatTotal: fat,
-          proteinTotal: protein,
+          kcalTotal: demand_calories_sum,
+          carbTotal: demand_carbohydrates_sum,
+          fatTotal: demand_fat_sum,
+          proteinTotal: demand_protein_sum,
         });
         setIsLoading(false);
       } catch (error) {
@@ -111,7 +122,7 @@ const ProgressCircles = () => {
     };
 
     fetchData();
-  }, []);
+  }, [date]);
 
   useEffect(() => {
     const calculateCurrentValues = () => {
