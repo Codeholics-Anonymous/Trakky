@@ -43,7 +43,10 @@ export function CustomDemand( {navigation} ) {
       // Add further error handling logic here
     } finally {
       setIsLoading(false);
-      navigation.pop();
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'HomeScreen'}]
+      });
     }
   };
 
