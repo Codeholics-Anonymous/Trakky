@@ -1,13 +1,39 @@
 import { View, Text, TouchableOpacity, Alert } from "react-native"
-import { resetUserData } from "../utils/Auth"
+import { useState } from "react";
+import { resetUserData, getUserData } from "../utils/Auth"
+import axios from 'axios';
+import LoadingScreen from './LoadingScreen';
 
 export function Settings({ navigation }) {
+  const [isLoading, setIsLoading] = useState(false);
   const handleLogout = async () => {
+    setIsLoading(true);
+    const { token } = await getUserData();
+    const config = {
+      headers: {
+        'Authorization': 'Token ' + token
+      }
+    };
+  
+    try {
+      // Sending the logout request to the server
+      await axios.post('https://trakky.onrender.com/logout/', null, config);
+      console.log('Logout successful');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  
+    // Resetting user data and navigating to the login screen
     await resetUserData();
+    setIsLoading(false);
     navigation.reset({
       index: 0,
-      routes: [{name: 'Login'}]
+      routes: [{ name: 'Login' }]
     });
+  };
+
+  if (isLoading) {
+    return <LoadingScreen />;
   }
 
   return (
