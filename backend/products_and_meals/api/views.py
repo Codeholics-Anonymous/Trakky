@@ -179,9 +179,9 @@ def api_delete_product_for_all_view(request, product_id):
 def add_product(request_data, user_id):
     serializer = ProductSerializer(data=request_data)
     if serializer.is_valid():
-        # check if this product exists in database
-        if Product.objects.filter(name=serializer.validated_data['name']).exists():
-            return short_response("message", "Product already exists.", status.HTTP_400_BAD_REQUEST)
+        # check if this product exists in database (only in products for this user and for all users)
+        if Product.objects.filter(Q(name=serializer.validated_data['name']) & (Q(user_id = user_id) | Q(user_id__isnull=True))).exists():
+            return short_response("message", "Product already exists", status.HTTP_400_BAD_REQUEST)
         # check if sum of macros isn't larger than 100g
         if above_upper_limit(serializer.validated_data['protein'], serializer.validated_data['carbohydrates'], serializer.validated_data['fat'], limit=100):
             return short_response("message", f"Macros amount to high ({serializer.validated_data['protein'] + serializer.validated_data['carbohydrates'] + serializer.validated_data['fat']}/{100.0})", status.HTTP_400_BAD_REQUEST)
