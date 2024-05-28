@@ -5,8 +5,9 @@ import Header from '../components/Header';
 import MealBox from '../components/MealBox';
 import { MealDataProvider } from '../components/MealDataContext'; // Adjust path as necessary
 import ProgressCircle from '../components/ProgressCircle';
-
+import { hasUserData } from '../utils/Auth';
 export function HomeScreen({ navigation }) {
+
   useEffect(() => {
     StatusBar.setBackgroundColor('#363636', true);
     StatusBar.setBarStyle('light-content', true);
