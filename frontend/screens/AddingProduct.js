@@ -1,45 +1,108 @@
 import axios from 'axios';
 import { Text, View, TextInput, TouchableOpacity, Button } from 'react-native';
 import { getUserData } from '../utils/Auth';
+import { useState } from 'react';
+import LoadingScreen from './LoadingScreen';
 
 export function AddingProduct({ navigation }) {
-  const [product, setProduct] = ({
+  const [isLoading, setIsLoading] = useState(false);
+  const [product, setProduct] = useState({
     name: "",
-    protein: 0,
-    carbohydrates: 0,
-    fat: 0
+    protein: "",
+    carbohydrates: "",
+    fat: ""
   });
 
+  const clearProduct = () => {
+    setProduct({    name: "",
+    protein: "",
+    carbohydrates: "",
+    fat: ""
+  })}
+ 
+  const handleInputChange = (field, value) => {
+    setProduct({
+      ...product,
+      [field]: value
+    });
+  };
+
   const handlePress = async () => {
-    const { token } = await getUserData();    
+    setIsLoading(true);
+    const { token } = await getUserData();
     const config = {
       headers: {
-          'Authorization': 'Token ' + token
+        'Authorization': 'Token ' + token
       }
     };
 
-    
     const productManagerUrl = 'https://trakky.onrender.com/api/product_manager/create_product/';
     const normalUrl = 'https://trakky.onrender.com/api/create_product/';
-    
+
     try {
-        // Try to create the product as a product manager
-        await axios.post(productManagerUrl, product, config);
-        console.log('Product created successfully as a product manager.');
-    } catch (error) {        
-        try {
-            // If the first request fails, try the normal route
-            await axios.post(normalUrl, product, config);
-            console.log('Product created successfully via normal route.');
-        } catch (error) {
-            console.error('Failed to create product via normal route.', error);
-        }
+      // Try to create the product as a product manager
+      await axios.post(productManagerUrl, product, config);
+      setIsLoading(false);
+      clearProduct()
+      console.log('Product created successfully as a product manager.');
+    } catch (error) {
+      try {
+        // If the first request fails, try the normal route
+        await axios.post(normalUrl, product, config);
+        setIsLoading(false);
+        clearProduct();
+        console.log('Product created successfully via normal route.');
+      } catch (error) {
+        clearProduct();
+        console.error('Invalid product', error);
+      }
     }
-  }
-  
+  };
+
   return (
-    <View>
-      <Button onPress={handlePress} title="aaa" />
+    <View className="bg-gray-100 flex min-h-full flex-col px-6 py-12 lg:px-8">
+      <View className="m-2">
+        <Text>Name:</Text>
+        <TextInput
+          value={product.name}
+          onChangeText={(text) => handleInputChange('name', text)}
+          placeholder="Enter product name"
+          style={{ borderWidth: 1, borderColor: '#ccc', padding: 8, borderRadius: 4 }}
+        />
+      </View>
+      <View className="m-2">
+        <Text>Protein:</Text>
+        <TextInput
+          value={product.protein}
+          onChangeText={(text) => handleInputChange('protein', text)}
+          placeholder="Enter protein amount"
+          keyboardType="numeric"
+          style={{ borderWidth: 1, borderColor: '#ccc', padding: 8, borderRadius: 4 }}
+        />
+      </View>
+      <View className="m-2">
+        <Text>Carbohydrates:</Text>
+        <TextInput
+          value={product.carbohydrates}
+          onChangeText={(text) => handleInputChange('carbohydrates', text)}
+          placeholder="Enter carbohydrates amount"
+          keyboardType="numeric"
+          style={{ borderWidth: 1, borderColor: '#ccc', padding: 8, borderRadius: 4 }}
+        />
+      </View>
+      <View className="m-2">
+        <Text>Fat:</Text>
+        <TextInput
+          value={product.fat}
+          onChangeText={(text) => handleInputChange('fat', text)}
+          placeholder="Enter fat amount"
+          keyboardType="numeric"
+          style={{ borderWidth: 1, borderColor: '#ccc', padding: 8, borderRadius: 4 }}
+        />
+      </View >
+      <View className="m-2">
+        <Button onPress={handlePress} title="Add Product" />
+      </View>
     </View>
-  )
+  );
 }
