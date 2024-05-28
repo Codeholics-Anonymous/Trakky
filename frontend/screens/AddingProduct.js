@@ -45,6 +45,7 @@ export function AddingProduct({ navigation }) {
       setIsLoading(false);
       clearProduct()
       console.log('Product created successfully as a product manager.');
+      navigation.pop();
     } catch (error) {
       try {
         // If the first request fails, try the normal route
@@ -52,12 +53,18 @@ export function AddingProduct({ navigation }) {
         setIsLoading(false);
         clearProduct();
         console.log('Product created successfully via normal route.');
+        navigation.pop();
       } catch (error) {
         clearProduct();
-        console.error('Invalid product', error);
+        setIsLoading(false);
+        navigation.pop();
       }
     }
   };
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
 
   return (
     <View className="bg-gray-100 flex min-h-full flex-col px-6 py-12 lg:px-8">
