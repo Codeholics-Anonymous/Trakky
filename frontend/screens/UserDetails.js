@@ -3,7 +3,7 @@ import { Logo250x250 } from '../components/Logo250x250';
 import { SelectList } from 'react-native-dropdown-select-list'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { saveUserData } from '../utils/Auth'
 import LoadingScreen from './LoadingScreen';
 
@@ -68,6 +68,7 @@ export function UserDetails({ route, navigation }) {
       Alert.alert("Error", "Something went wrong. Please try again.");
     });
   };
+
 
   if (isLoading) {
     return <LoadingScreen />;

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Text, View, TextInput, TouchableOpacity, Button } from 'react-native';
+import { Text, View, TextInput, TouchableOpacity, Button, Alert } from 'react-native';
 import { getUserData } from '../utils/Auth';
 import { useState } from 'react';
 import LoadingScreen from './LoadingScreen';
@@ -44,7 +44,7 @@ export function AddingProduct({ navigation }) {
       await axios.post(productManagerUrl, product, config);
       setIsLoading(false);
       clearProduct()
-      console.log('Product created successfully as a product manager.');
+      Alert.alert('Product created successfully as a product manager');
       navigation.pop();
     } catch (error) {
       try {
@@ -52,11 +52,12 @@ export function AddingProduct({ navigation }) {
         await axios.post(normalUrl, product, config);
         setIsLoading(false);
         clearProduct();
-        console.log('Product created successfully via normal route.');
+        Alert.alert('Product created successfully');
         navigation.pop();
       } catch (error) {
         clearProduct();
         setIsLoading(false);
+        Alert.alert('Try again, something went wrong');
         navigation.pop();
       }
     }

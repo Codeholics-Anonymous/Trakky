@@ -32,6 +32,10 @@ export function Settings({ navigation }) {
     });
   };
 
+  const handleDelete = () => {
+    const [isLoading, setIsLoading] = useState(false);
+  }
+
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -47,6 +51,9 @@ export function Settings({ navigation }) {
       </TouchableOpacity>
       <TouchableOpacity className='bg-light-green p-3 rounded-full shadow-xl shadow-dark-green my-4' onPress={() => {navigation.navigate("CustomDemand")}}>
         <Text className='text-center text-xl font-bold'>Setup Custom Demand</Text>
+      </TouchableOpacity>
+      <TouchableOpacity className='bg-light-green p-3 rounded-full shadow-xl shadow-dark-green my-4' onPress={() => {navigation.navigate("CustomDemand")}}>
+        <Text className='text-center text-xl font-bold'>Delete Account</Text>
       </TouchableOpacity>
       <TouchableOpacity className='bg-light-green p-3 rounded-full shadow-xl shadow-dark-green my-4' onPress={handleLogout}>
         <Text className='text-center text-xl font-bold'>Logout</Text>
