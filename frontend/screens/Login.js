@@ -41,7 +41,6 @@ export function Login( {navigation} ) {
   useEffect(() => {
     const checkIfLoggedIn = async () => {
       setIsLoading(true);
-      const { username } = await getUserData();
       const useHasData = await hasUserData();
       setIsLoading(false);
       if(useHasData) {
