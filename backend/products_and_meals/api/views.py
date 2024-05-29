@@ -560,6 +560,17 @@ def api_delete_meal_item_view(request, meal_item_id):
     except MealItem.DoesNotExist:
         return not_found_response()
 
+    # get all information to update summary
+    try:
+        userprofile_id = UserProfile.objects.get(user_id=request.user.id)
+    except UserProfile.DoesNotExist:
+        return short_response("message", "Userprofile does not exist", status.HTTP_400_BAD_REQUEST)
+    date = Meal.objects.get(meal_id=meal_item.meal_id).date
+    product = Product.objects.get(product_id=meal_item.product_id)
+    macros = Product.calculate_nutrition(meal_item.gram_amount, product)
+    # find summary to update it
+    Summary.update_calories(userprofile_id=userprofile_id, increase=0, protein=macros[0], carbohydrates=macros[1], fat=macros[2], date=date)
+
     if MealItem.remove_product(id=meal_item.meal_item_id):
         return short_response("message", "Deletion successful")
     else:
