@@ -50,6 +50,47 @@ export function CustomDemand( {navigation} ) {
     }
   };
 
+  const handleBackToBasic = async () => {
+    setIsLoading(true);
+  
+    try {
+      const { token } = await getUserData();
+      const config = {
+        headers: {
+          'Authorization': 'Token ' + token
+        }
+      };
+
+      console.log(token)
+  
+      const basicDemandUrl = 'https://trakky.onrender.com/api/basic_demand/';
+  
+      const response = await axios.get(basicDemandUrl, config);
+      const { protein, carbohydrates, fat, demand } = response.data;
+  
+      const demandUrl = 'https://trakky.onrender.com/api/create_demand/';
+  
+      await axios.post(demandUrl, {
+        fat: fat,
+        protein: protein,
+        carbohydrates: carbohydrates,
+        daily_calory_demand: demand
+      }, config);
+  
+      console.log('Demand created successfully.');
+      // Add further logic here for handling successful response
+    } catch (error) {
+      console.error('Error creating demand:', error);
+      // Add further error handling logic here
+    } finally {
+      setIsLoading(false);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'HomeScreen' }]
+      });
+    }
+  };
+
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -76,6 +117,9 @@ export function CustomDemand( {navigation} ) {
           keyboardType="numeric"
           onChangeText={(val) => handleChange("protein", val)}
         />
+      </View>
+      <View className="m-2">
+        <Button title='Back to basic demand' onPress={handleBackToBasic} />
       </View>
       <View className="m-2">
         <Button 
