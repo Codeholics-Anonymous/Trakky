@@ -32,8 +32,34 @@ export function Settings({ navigation }) {
     });
   };
 
-  const handleDelete = () => {
-    const [isLoading, setIsLoading] = useState(false);
+  const handleDelete = async () => {
+    setIsLoading(true);
+    const { token } = await getUserData();
+
+    const config = {
+      headers: {
+        'Authorization': 'Token ' + token
+      }
+    };
+
+    axios.delete('https://trakky.onrender.com/delete/', config)
+      .then(response => {
+        setIsLoading(false);
+        resetUserData();
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }]
+        });
+      })
+      .catch(error => {
+        setIsLoading(false);
+        Alert.alert("Something went wrong while deleting account")
+        resetUserData();
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }]
+        });
+      });
   }
 
   if (isLoading) {
@@ -52,7 +78,7 @@ export function Settings({ navigation }) {
       <TouchableOpacity className='bg-light-green p-3 rounded-full shadow-xl shadow-dark-green my-4' onPress={() => {navigation.navigate("CustomDemand")}}>
         <Text className='text-center text-xl font-bold'>Setup Custom Demand</Text>
       </TouchableOpacity>
-      <TouchableOpacity className='bg-light-green p-3 rounded-full shadow-xl shadow-dark-green my-4' onPress={() => {navigation.navigate("CustomDemand")}}>
+      <TouchableOpacity className='bg-light-green p-3 rounded-full shadow-xl shadow-dark-green my-4' onPress={handleDelete}>
         <Text className='text-center text-xl font-bold'>Delete Account</Text>
       </TouchableOpacity>
       <TouchableOpacity className='bg-light-green p-3 rounded-full shadow-xl shadow-dark-green my-4' onPress={handleLogout}>
