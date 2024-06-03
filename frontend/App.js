@@ -8,6 +8,7 @@ import { Settings } from './screens/Settings';
 import { SettingsUser } from './screens/SettingsUser'
 import { AddingProduct } from './screens/AddingProduct';
 import { CustomDemand } from './screens/CustomDemand';
+import { Statistics } from './screens/Statistics';
 
 const Stack = createNativeStackNavigator();
 
@@ -35,6 +36,7 @@ function App() {
         <Stack.Screen name="SettingsUser" component={SettingsUser} />
         <Stack.Screen name="AddingProduct" component={AddingProduct} />
         <Stack.Screen name="CustomDemand" component={CustomDemand} />
+        <Stack.Screen name="Statistics" component={Statistics} />
       </Stack.Navigator>
     </NavigationContainer>
   );
