@@ -385,7 +385,10 @@ def get_meal(user_id, request_data, date, type):
     i = 0
     
     for x in mealitems:
-        product = Product.objects.get(product_id=x.product_id)
+        try:
+            product = Product.objects.get(product_id=x.product_id)
+        except Product.DoesNotExist:
+            return short_response("message", "Product does not exist", status.HTTP_404_NOT_FOUND)
         product_macros = Product.calculate_nutrition(x.gram_amount, product)
         product_data = {
             'mealitem_id' : x.meal_item_id,
@@ -425,10 +428,18 @@ def api_detail_dinner_meal_view(request, date):
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def api_detail_meal_view(request, date):
-    try:
-        meal = Meal.objects.filter(user_id=request.user.id, date=date)
-    except Meal.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    # get all meals of this user from request date
+    meal = Meal.objects.filter(user_id=request.user.id, date=date)
+
+    data = {
+        'breakfast' : {},
+        'lunch' : {},
+        'dinner' : {}
+    }
+
+    # if user does not have meals, return empty dictionary
+    if len(meal) == 0:
+        return Response(data, status=status.HTTP_200_OK)
 
     # find mealitems added by user at this date
 
@@ -451,16 +462,14 @@ def api_detail_meal_view(request, date):
         elif (x.type=='dinner'):
             dinner_meal_id = x.meal_id
 
-    data = {
-        'breakfast' : {},
-        'lunch' : {},
-        'dinner' : {}
-    }
-
     i = j = k = 0 # iterators to add products named as product0, product1, ...
 
     for x in mealitems:
-        product = Product.objects.get(product_id=x.product_id) # get product from database
+        # check if product wasn't deleted from database
+        try:
+            product = Product.objects.get(product_id=x.product_id) # get product from database
+        except Product.DoesNotExist:
+            return short_response("message", "Product does not exist", status.HTTP_404_NOT_FOUND)
         product_macros_info = Product.calculate_nutrition(gram_amount=x.gram_amount, product=product) # calculate macros per gram_amount
         product_info = {
             'mealitem_id' : x.meal_item_id,
