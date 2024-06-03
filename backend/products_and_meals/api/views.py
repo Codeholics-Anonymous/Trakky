@@ -371,9 +371,11 @@ def api_create_demand_view(request):
 def get_meal(user_id, request_data, date, type):
     # find meal_id from selected date
     try:
-        meal_id = Meal.objects.get(user_id=user_id, date=date, type=type).meal_id
+        meal = Meal.objects.get(user_id=user_id, date=date, type=type)
     except Meal.DoesNotExist:
         return short_response("message", "meal does not exist", status.HTTP_404_NOT_FOUND)
+
+    meal_id = meal.meal_id
 
     # find all mealitems added to found meal
     mealitems = MealItem.objects.filter(meal_id=meal_id)
