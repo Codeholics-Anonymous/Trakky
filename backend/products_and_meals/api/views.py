@@ -305,9 +305,9 @@ def api_detail_demand_view(request, starting_date, ending_date):
 
     return Response({
         'demand_calories_sum' : demand_calories_sum, 
-        'demand_protein_sum' : demand_protein_sum, 
-        'demand_carbohydrates_sum' : demand_carbohydrates_sum, 
-        'demand_fat_sum' : demand_fat_sum
+        'demand_protein_sum' : round(demand_protein_sum, 1), 
+        'demand_carbohydrates_sum' : round(demand_carbohydrates_sum, 1), 
+        'demand_fat_sum' : round(demand_fat_sum, 1)
         }, status=status.HTTP_200_OK)
 
 from user.models import UserProfile
