@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import CommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LoadingScreen from '../screens/LoadingScreen';
@@ -24,7 +24,22 @@ const MealBox = ({ title }) => {
   };
 
   const handleDelete = (mealItemId) => {
-    deleteMealItem(mealItemId);
+    Alert.alert(
+      'Are you sure?',
+      'Do you really want to delete this item?',
+      [
+        {
+          text: 'No',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {
+          text: 'Yes',
+          onPress: () => deleteMealItem(mealItemId),
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   // Helper function to flatten the data structure
