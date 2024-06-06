@@ -87,6 +87,15 @@ const MealBox = ({ title }) => {
     return <LoadingScreen />;
   }
 
+  const handleGramAmountChange = (value) => {
+    if (value === '' || parseFloat(value) >= 0) {
+      setGramAmount(value);
+    } else {
+      Alert.alert('Invalid input', 'Please enter a non-negative number for the gram amount.');
+      setGramAmount('');
+    }
+  };
+
   return (
     <View className="w-11/12 mb-4 relative">
       <TouchableOpacity
@@ -141,7 +150,7 @@ const MealBox = ({ title }) => {
             <TextInput
               placeholder="Gram Amount"
               value={gramAmount}
-              onChangeText={setGramAmount}
+              onChangeText={handleGramAmountChange}
               keyboardType="numeric"
               className="border-b border-black mb-2"
             />
