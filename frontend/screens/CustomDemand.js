@@ -119,7 +119,7 @@ export function CustomDemand( {navigation} ) {
         />
       </View>
       <View className="m-2">
-        <Button title='Back to basic demand' onPress={handleBackToBasic} />
+        <Button title='Set Basic Demand' onPress={handleBackToBasic} />
       </View>
       <View className="m-2">
         <Button 
