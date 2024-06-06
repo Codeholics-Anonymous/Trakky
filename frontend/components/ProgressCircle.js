@@ -167,6 +167,16 @@ const ProgressCircles = ({creationDate}) => {
     return <LoadingScreen />;
   }
 
+  function formatNumber(num) {
+    // Format the number to 2 decimal places
+    let formattedNum = num.toFixed(2);
+    
+    // Remove trailing zeros and the decimal point if not needed
+    formattedNum = parseFloat(formattedNum).toString();
+    
+    return formattedNum;
+}
+
   return (
     <View className="flex-row items-center justify-between w-full px-6 mt-8 mb-3" style={{ height: height * 0.31 }}>
       {isAccountCreatedDate ? <View style={{ width: 36 }} /> : 
@@ -180,12 +190,12 @@ const ProgressCircles = ({creationDate}) => {
             <SingleCircle kcalCurrent={current.kcalCurrent} kcalTotal={total.kcalTotal} />
           ) : (
             <NestedCircles
-              carbCurrent={current.carbCurrent}
-              carbTotal={total.carbTotal}
-              fatCurrent={current.fatCurrent}
-              fatTotal={total.fatTotal}
-              proteinCurrent={current.proteinCurrent}
-              proteinTotal={total.proteinTotal}
+              carbCurrent={formatNumber(current.carbCurrent)}
+              carbTotal={formatNumber(total.carbTotal)}
+              fatCurrent={formatNumber(current.fatCurrent)}
+              fatTotal={formatNumber(total.fatTotal)}
+              proteinCurrent={formatNumber(current.proteinCurrent)}
+              proteinTotal={formatNumber(total.proteinTotal)}
             />
           )}
         </TouchableOpacity>
