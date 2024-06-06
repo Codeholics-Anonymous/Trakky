@@ -97,12 +97,36 @@ export const MealDataProvider = ({ children }) => {
     }
   };
 
+  const deleteMealItem = async (mealItemId) => {
+    try {
+      const { token } = await getUserData();
+      if (!token) {
+        console.error("No token found. Please login again.");
+        return;
+      }
+      const url = `https://trakky.onrender.com/api/mealitem/${mealItemId}/delete/`;
+      await axios.delete(url, {
+        headers: {
+          'Authorization': `Token ${token}`
+        }
+      });
+
+      // Refresh meal data after deleting a meal item
+      fetchData(date);
+    } catch (error) {
+      console.error("Error deleting meal item:", error);
+      if (error.response) {
+        console.error(`Response Error: ${error.response.status} ${JSON.stringify(error.response.data)}`);
+      }
+    }
+  };
+
   useEffect(() => {
     fetchData(date); // Trigger a fetch when the date changes
   }, [date]);
 
   return (
-    <MealDataContext.Provider value={{ mealData, setMealData, date, setDate, searchResults, searchProducts, searchError, createMealItem }}>
+    <MealDataContext.Provider value={{ mealData, setMealData, date, setDate, searchResults, searchProducts, searchError, createMealItem, deleteMealItem }}>
       {children}
     </MealDataContext.Provider>
   );

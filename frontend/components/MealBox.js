@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import CommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useMealData } from './MealDataContext'; // Adjust path as necessary
 import LoadingScreen from '../screens/LoadingScreen';
+import { useMealData } from './MealDataContext'; // Adjust path as necessary
+
 const MealBox = ({ title }) => {
   const [expanded, setExpanded] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const { mealData, searchResults, searchProducts, searchError, createMealItem, date } = useMealData();
+  const { mealData, searchResults, searchProducts, searchError, createMealItem, deleteMealItem, date } = useMealData();
   const [content, setContent] = useState([]);
   const [searchQuery, setSearchQuery] = useState(''); // State for search query
   const [gramAmount, setGramAmount] = useState(''); // State for gram amount
@@ -21,6 +23,10 @@ const MealBox = ({ title }) => {
     }
   };
 
+  const handleDelete = (mealItemId) => {
+    deleteMealItem(mealItemId);
+  };
+
   // Helper function to flatten the data structure
   const flattenMealData = (data) => {
     return Object.values(data).map(item => ({
@@ -30,6 +36,7 @@ const MealBox = ({ title }) => {
       carbohydrates: item.carbohydrates,
       fat: item.fat,
       grams: item.grams,
+      mealitem_id: item.mealitem_id
     }));
   };
 
@@ -50,7 +57,7 @@ const MealBox = ({ title }) => {
       setIsLoading(true);  // Set loading to true before fetching data
       try {
         // Simulate fetching data
-        console.log("Meal data received in MealBox:", mealData);
+        console.log("Meal data received in MealBox:", flattenedData);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -87,7 +94,12 @@ const MealBox = ({ title }) => {
         <View className="rounded-lg bg-lgt-gray p-4" style={{ elevation: 5 }}>
           {combinedData.map((item, index) => (
             <View key={index} className="p-1 m-1 bg-lgt-gray flex flex-row justify-between items-center">
-              <Text className="text-black text-base">{item.name}</Text>
+              <View className="flex flex-row items-center">
+                <TouchableOpacity onPress={() => handleDelete(item.mealitem_id)}>
+                  <FontAwesome5 name="times-circle" className="text-red-500 text-xl mr-2" />
+                </TouchableOpacity>
+                <Text className="text-black text-base">{item.name}</Text>
+              </View>
               <Text className="text-black text-s">{item.calories} kcal</Text>
             </View>
           ))}
