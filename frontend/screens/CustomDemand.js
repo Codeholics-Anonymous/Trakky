@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, TextInput, Button } from "react-native";
+import { View, TextInput, Button, Alert } from "react-native";
 import axios from "axios";
 import LoadingScreen from './LoadingScreen';
 import { getUserData } from "../utils/Auth";
@@ -7,13 +7,18 @@ import { getUserData } from "../utils/Auth";
 export function CustomDemand( {navigation} ) {
   const [isLoading, setIsLoading] = useState(false);
   const [userProfileData, setUserProfileData] = useState({
-    fat: 0,
-    carbs: 0,
-    protein: 0
+    fat: '',
+    carbs: '',
+    protein: ''
   });
 
   const handleChange = (key, val) => {
-    setUserProfileData(prevState => ({ ...prevState, [key]: parseFloat(val) }));
+    if (val === '' || parseFloat(val) >= 0) {
+      setUserProfileData(prevState => ({ ...prevState, [key]: val }));
+    } else {
+      Alert.alert('Invalid input', 'Please enter a non-negative number.');
+      setUserProfileData(prevState => ({ ...prevState, [key]: '' }));
+    }
   };
 
   const handleSubmit = async () => {
@@ -30,10 +35,10 @@ export function CustomDemand( {navigation} ) {
       const demandUrl = 'https://trakky.onrender.com/api/create_demand/';
 
       await axios.post(demandUrl, {
-        fat : userProfileData.fat,
-        protein : userProfileData.protein,
-        carbohydrates : userProfileData.carbs,
-        daily_calory_demand : userProfileData.fat * 9 + userProfileData.protein * 4 + userProfileData.carbs * 4
+        fat : parseFloat(userProfileData.fat),
+        protein : parseFloat(userProfileData.protein),
+        carbohydrates : parseFloat(userProfileData.carbs),
+        daily_calory_demand : parseFloat(userProfileData.fat) * 9 + parseFloat(userProfileData.protein) * 4 + parseFloat(userProfileData.carbs) * 4
 
       }, config);
       console.log('Demand created successfully.');
@@ -101,6 +106,7 @@ export function CustomDemand( {navigation} ) {
         <TextInput
           placeholder="Enter Custom Fat Demand"
           keyboardType="numeric"
+          value={userProfileData.fat}
           onChangeText={(val) => handleChange("fat", val)}
         />
       </View>
@@ -108,6 +114,7 @@ export function CustomDemand( {navigation} ) {
         <TextInput
           placeholder="Enter Custom Carbs Demand"
           keyboardType="numeric"
+          value={userProfileData.carbs}
           onChangeText={(val) => handleChange("carbs", val)}
         />
       </View>
@@ -115,6 +122,7 @@ export function CustomDemand( {navigation} ) {
         <TextInput
           placeholder="Enter Custom Protein Demand"
           keyboardType="numeric"
+          value={userProfileData.protein}
           onChangeText={(val) => handleChange("protein", val)}
         />
       </View>
