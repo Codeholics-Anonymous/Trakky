@@ -14,17 +14,27 @@ export function AddingProduct({ navigation }) {
   });
 
   const clearProduct = () => {
-    setProduct({    name: "",
-    protein: "",
-    carbohydrates: "",
-    fat: ""
-  })}
- 
-  const handleInputChange = (field, value) => {
     setProduct({
-      ...product,
-      [field]: value
+      name: "",
+      protein: "",
+      carbohydrates: "",
+      fat: ""
     });
+  };
+
+  const handleInputChange = (field, value) => {
+    if (field !== 'name' && value !== '' && parseFloat(value) < 0) {
+      Alert.alert('Invalid input', 'Please enter a non-negative number.');
+      setProduct({
+        ...product,
+        [field]: ''
+      });
+    } else {
+      setProduct({
+        ...product,
+        [field]: value
+      });
+    }
   };
 
   const handlePress = async () => {
@@ -43,7 +53,7 @@ export function AddingProduct({ navigation }) {
       // Try to create the product as a product manager
       await axios.post(productManagerUrl, product, config);
       setIsLoading(false);
-      clearProduct()
+      clearProduct();
       Alert.alert('Product created successfully as a product manager');
       navigation.pop();
     } catch (error) {
