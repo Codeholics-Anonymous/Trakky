@@ -1,5 +1,5 @@
 # Trakky
-
+<img src="assets/LOGO(1).svg" width="300" height="300" alt="banner">
 ## About TRAKKY
 TRAKKY is a comprehensive diet and nutrition tracking application designed to help individuals maintain a healthy lifestyle by monitoring their caloric intake and macronutrient distribution. This project, developed by Codeholics Anonymous, aims to simplify the process of tracking food consumption and offers users the ability to calculate their daily caloric needs based on personal health goals.
 
