@@ -1,10 +1,10 @@
-import { Text, View, TextInput, TouchableOpacity, Button, Alert } from 'react-native';
-import { Logo250x250 } from '../components/Logo250x250';
-import { SelectList } from 'react-native-dropdown-select-list'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { saveUserData } from '../utils/Auth'
+import { useState } from 'react';
+import { Alert, Button, TextInput, View } from 'react-native';
+import { SelectList } from 'react-native-dropdown-select-list';
+import { saveUserData } from '../utils/Auth';
+import { API_BASE_URL } from '../utils/config';
 import LoadingScreen from './LoadingScreen';
 
 export function UserDetails({ route, navigation }) {
@@ -39,7 +39,7 @@ export function UserDetails({ route, navigation }) {
   const handleSubmit = () => {
     const formattedBirthDate = formatDate(userProfileData.birthDate); // Assuming formatDate function exists as defined previously
     setIsLoading(true)
-    axios.post(`https://trakky.onrender.com/register/`, {
+    axios.post(`${API_BASE_URL}/register/`, {
       register_data: {
         username: login,
         password: password

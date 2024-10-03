@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, Button } from "react-native";
-import { getUserData } from '../utils/Auth';
-import LoadingScreen from './LoadingScreen';
-import axios from "axios";
 import DateTimePicker from '@react-native-community/datetimepicker';
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { Button, Text, View } from "react-native";
+import { getUserData } from '../utils/Auth';
+import { API_BASE_URL } from '../utils/config';
+import LoadingScreen from './LoadingScreen';
 
 export function Statistics({ navigation }) {
   const [creationDate, setCreationDate] = useState("");
@@ -27,7 +28,7 @@ export function Statistics({ navigation }) {
         setIsLoading(true);
         const { token } = await getUserData();
         const config = { headers: { 'Authorization': 'Token ' + token }};
-        const response = await axios.get('https://trakky.onrender.com/user/account_creation_date/', config);
+        const response = await axios.get(`${API_BASE_URL}/user/account_creation_date/`, config);
         setCreationDate(response.data.date);
         setIsLoading(false);
       } catch (error) {
@@ -48,8 +49,8 @@ export function Statistics({ navigation }) {
       const startDateFormatted = formatDate(startDate);
       const endDateFormatted = formatDate(endDate);
 
-      const summaryResponse = await axios.get(`https://trakky.onrender.com/api/summary/${startDateFormatted}/${endDateFormatted}/`, config);
-      const demandResponse = await axios.get(`https://trakky.onrender.com/api/demand/${startDateFormatted}/${endDateFormatted}/`, config);
+      const summaryResponse = await axios.get(`${API_BASE_URL}/api/summary/${startDateFormatted}/${endDateFormatted}/`, config);
+      const demandResponse = await axios.get(`${API_BASE_URL}/api/demand/${startDateFormatted}/${endDateFormatted}/`, config);
 
       setSummaryData(summaryResponse.data);
       setDemandData(demandResponse.data);

@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, StatusBar } from 'react-native';
 import DateDisplay from '../components/DateDisplay';
@@ -5,9 +6,9 @@ import Header from '../components/Header';
 import MealBox from '../components/MealBox';
 import { MealDataProvider } from '../components/MealDataContext'; // Adjust path as necessary
 import ProgressCircle from '../components/ProgressCircle';
+import { getUserData } from '../utils/Auth';
+import { API_BASE_URL } from '../utils/config';
 import LoadingScreen from './LoadingScreen';
-import { getUserData } from '../utils/Auth'
-import axios from 'axios';
 
 export function HomeScreen({ navigation }) {
   const [creationDate, setCreationDate] = useState("");
@@ -26,7 +27,7 @@ export function HomeScreen({ navigation }) {
             'Authorization': 'Token ' + token
           }
         };
-        const response = await axios.get('https://trakky.onrender.com/user/account_creation_date/', config);
+        const response = await axios.get(`${API_BASE_URL}/user/account_creation_date/`, config);
         setCreationDate(response.data.date);
         setIsLoading(false)
       } catch (error) {

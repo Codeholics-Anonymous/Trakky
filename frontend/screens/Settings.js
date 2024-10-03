@@ -1,7 +1,8 @@
-import { View, Text, TouchableOpacity, Alert } from "react-native"
-import { useState } from "react";
-import { resetUserData, getUserData } from "../utils/Auth"
 import axios from 'axios';
+import { useState } from "react";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { getUserData, resetUserData } from "../utils/Auth";
+import { API_BASE_URL } from '../utils/config';
 import LoadingScreen from './LoadingScreen';
 
 export function Settings({ navigation }) {
@@ -17,7 +18,7 @@ export function Settings({ navigation }) {
   
     try {
       // Sending the logout request to the server
-      await axios.post('https://trakky.onrender.com/logout/', null, config);
+      await axios.post(`${API_BASE_URL}/logout/`, null, config);
       console.log('Logout successful');
     } catch (error) {
       console.error('Error logging out:', error);
@@ -42,7 +43,7 @@ export function Settings({ navigation }) {
       }
     };
 
-    axios.delete('https://trakky.onrender.com/delete/', config)
+    axios.delete(`${API_BASE_URL}/delete/`, config)
       .then(response => {
         setIsLoading(false);
         resetUserData();

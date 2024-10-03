@@ -1,9 +1,10 @@
-import { Text, View, TextInput, TouchableOpacity, Button, Alert } from 'react-native';
-import { SelectList } from 'react-native-dropdown-select-list'
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
 import { useState } from 'react';
-import { getUserData } from '../utils/Auth'
+import { Button, TextInput, View } from 'react-native';
+import { SelectList } from 'react-native-dropdown-select-list';
+import { getUserData } from '../utils/Auth';
+import { API_BASE_URL } from '../utils/config';
 import LoadingScreen from './LoadingScreen';
 
 export function SettingsUser({ navigation }) {
@@ -43,7 +44,7 @@ export function SettingsUser({ navigation }) {
         }
       };
       
-      axios.put('https://trakky.onrender.com/user/userprofile/update/', {
+      axios.put(`${API_BASE_URL}/user/userprofile/update/`, {
         sex: userProfileData.sex,
         birth_date: formatDate(userProfileData.birthDate),
         work_type: userProfileData.workType,
