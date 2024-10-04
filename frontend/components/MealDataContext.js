@@ -1,6 +1,7 @@
 import axios from 'axios';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { getUserData } from '../utils/Auth.js'; // Ensure path is correct
+import { API_BASE_URL } from '../utils/config';
 
 const MealDataContext = createContext();
 
@@ -24,7 +25,7 @@ export const MealDataProvider = ({ children }) => {
         return;
       }
       const dateString = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
-      const url = `https://trakky.onrender.com/api/meal/${dateString}/`;
+      const url = `${API_BASE_URL}/api/meal/${dateString}/`;
 
       const response = await axios.get(url, {
         headers: {
@@ -50,7 +51,7 @@ export const MealDataProvider = ({ children }) => {
         console.error("No token found. Please login again.");
         return;
       }
-      const url = `https://trakky.onrender.com/api/product/${query}/`;
+      const url = `${API_BASE_URL}/api/product/${query}/`;
       const response = await axios.get(url, {
         headers: {
           'Authorization': `Token ${token}`
@@ -77,7 +78,7 @@ export const MealDataProvider = ({ children }) => {
         console.error("No token found. Please login again.");
         return;
       }
-      const url = `https://trakky.onrender.com/api/create_mealitem/${mealType}/${date}/`;
+      const url = `${API_BASE_URL}/api/create_mealitem/${mealType}/${date}/`;
       const response = await axios.post(url, {
         "product_id": productId,
         "gram_amount": gramAmount
@@ -104,7 +105,7 @@ export const MealDataProvider = ({ children }) => {
         console.error("No token found. Please login again.");
         return;
       }
-      const url = `https://trakky.onrender.com/api/mealitem/${mealItemId}/delete/`;
+      const url = `${API_BASE_URL}/api/mealitem/${mealItemId}/delete/`;
       await axios.delete(url, {
         headers: {
           'Authorization': `Token ${token}`

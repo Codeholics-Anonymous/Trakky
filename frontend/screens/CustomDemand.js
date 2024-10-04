@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { View, TextInput, Button, Alert } from "react-native";
 import axios from "axios";
-import LoadingScreen from './LoadingScreen';
+import React, { useState } from "react";
+import { Alert, Button, TextInput, View } from "react-native";
 import { getUserData } from "../utils/Auth";
+import { API_BASE_URL } from '../utils/config';
+import LoadingScreen from './LoadingScreen';
 
 export function CustomDemand( {navigation} ) {
   const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +33,7 @@ export function CustomDemand( {navigation} ) {
         }
       };
 
-      const demandUrl = 'https://trakky.onrender.com/api/create_demand/';
+      const demandUrl = `${API_BASE_URL}/api/create_demand/`;
 
       await axios.post(demandUrl, {
         fat : parseFloat(userProfileData.fat),
@@ -68,12 +69,12 @@ export function CustomDemand( {navigation} ) {
 
       console.log(token)
   
-      const basicDemandUrl = 'https://trakky.onrender.com/api/basic_demand/';
+      const basicDemandUrl = `${API_BASE_URL}/api/basic_demand/`;
   
       const response = await axios.get(basicDemandUrl, config);
       const { protein, carbohydrates, fat, demand } = response.data;
   
-      const demandUrl = 'https://trakky.onrender.com/api/create_demand/';
+      const demandUrl = `${API_BASE_URL}/api/create_demand/`;
   
       await axios.post(demandUrl, {
         fat: fat,

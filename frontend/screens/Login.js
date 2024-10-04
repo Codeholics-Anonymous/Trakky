@@ -1,10 +1,10 @@
-import { Text, View, TextInput, TouchableOpacity, Button, Alert} from 'react-native';
-import { Logo250x250 } from '../components/Logo250x250';
-import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { getUserData, saveUserData } from '../utils/Auth'
+import { useEffect, useState } from 'react';
+import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Logo250x250 } from '../components/Logo250x250';
+import { hasUserData, saveUserData } from '../utils/Auth';
+import { API_BASE_URL } from '../utils/config';
 import LoadingScreen from './LoadingScreen';
-import { hasUserData } from '../utils/Auth';
 
 export function Login( {navigation} ) {  
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +23,7 @@ export function Login( {navigation} ) {
 
   const handleSubmit = () => {
     setIsLoading(true)
-    axios.post(`https://trakky.onrender.com/login/`, {
+    axios.post(`${API_BASE_URL}/login/`, {
       username: credentials.login,
       password: credentials.password
     })

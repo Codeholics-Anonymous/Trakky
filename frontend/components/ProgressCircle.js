@@ -3,9 +3,10 @@ import { useEffect, useState } from 'react';
 import { Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { CircularProgressBase } from 'react-native-circular-progress-indicator';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import { getUserData } from '../utils/Auth';
-import { useMealData } from './MealDataContext';
 import LoadingScreen from '../screens/LoadingScreen';
+import { getUserData } from '../utils/Auth';
+import { API_BASE_URL } from '../utils/config';
+import { useMealData } from './MealDataContext';
 
 const commonProps = {
   activeStrokeWidth: 25,
@@ -106,7 +107,7 @@ const ProgressCircles = ({creationDate}) => {
       try {
         const { token } = await getUserData(); // Make sure getUserData() is defined and returns an object with token
         const currDate = formatDate(date);
-        const url = `https://trakky.onrender.com/api/demand/${currDate}/${currDate}/`;
+        const url = `${API_BASE_URL}/api/demand/${currDate}/${currDate}/`;
         const response = await axios.get(url, {
           headers: {
             Authorization: 'Token ' + token,

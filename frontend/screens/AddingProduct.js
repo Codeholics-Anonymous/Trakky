@@ -1,7 +1,8 @@
 import axios from 'axios';
-import { Text, View, TextInput, TouchableOpacity, Button, Alert } from 'react-native';
-import { getUserData } from '../utils/Auth';
 import { useState } from 'react';
+import { Alert, Button, Text, TextInput, View } from 'react-native';
+import { getUserData } from '../utils/Auth';
+import { API_BASE_URL } from '../utils/config';
 import LoadingScreen from './LoadingScreen';
 
 export function AddingProduct({ navigation }) {
@@ -46,8 +47,8 @@ export function AddingProduct({ navigation }) {
       }
     };
 
-    const productManagerUrl = 'https://trakky.onrender.com/api/product_manager/create_product/';
-    const normalUrl = 'https://trakky.onrender.com/api/create_product/';
+    const productManagerUrl = `${API_BASE_URL}/api/product_manager/create_product/`;
+    const normalUrl = `${API_BASE_URL}/api/create_product/`;
 
     try {
       // Try to create the product as a product manager
