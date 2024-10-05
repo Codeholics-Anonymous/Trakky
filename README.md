@@ -13,17 +13,38 @@
 Trakky is a comprehensive diet and nutrition tracking application designed to help individuals maintain a healthy lifestyle by monitoring their caloric intake and macronutrient distribution. This project, developed by Codeholics Anonymous, aims to simplify the process of tracking food consumption and offers users the ability to calculate their daily caloric needs based on personal health goals.
 
 ### Features
-- **Track Daily Caloric Intake**: Log your meals and monitor daily calories with ease.
-- **Macronutrient Breakdown**: Get insights into your consumption of proteins, carbohydrates, and fats.
-- **Custom Meal Planning**: Add custom foods if they are not available in the database.
-- **Caloric Need Calculation**: Calculate your recommended daily caloric intake based on your health objectives.
-- **Historical Data Review**: Review your past entries to monitor progress and adjust your diet accordingly.
+- **Register and log in**
+  <div align="center">
+    <img src="assets/login.gif" alt="Login GIF" style="width: 300px;">
+  </div>
 
-<div align="center" display="flex">
-  <img src="assets/QjWdcN.jpeg" alt="screenshot">
-  <img src="assets/WHHlI6.jpeg" alt="screenshot">
-  <img src="assets/r5ek1d.jpeg" alt="screenshot">
-</div>
+  
+- **Track Daily Caloric Intake**: Log your meals and monitor daily calories with ease. Get insights into your consumption of proteins, carbohydrates, and fats.
+  <div align="center">
+    <img src="assets/adding product.gif" alt="Adding Product GIF" style="width: 300px;">
+  </div>
+
+  
+- **Custom Meal Planning**: Add custom foods if they are not available in the database.
+  <div align="center">
+    <img src="assets/own product.gif" alt="Own Product GIF" style="width: 300px;">
+  </div>
+
+  
+- **Caloric Need Calculation**: Calculate your recommended daily caloric intake based on your health objectives or set own demand.
+  <div align="center">
+    <img src="assets/own demand.gif" alt="Own Demand GIF" style="width: 300px;">
+  </div>
+
+  
+- **Historical Data Review**: Review your past entries to monitor progress and adjust your diet accordingly.
+  <div align="center">
+    <img src="assets/date change.gif" alt="Date Change GIF" style="width: 300px;">
+  </div>
+
+
+
+
 
 ### Getting Started
 You can download Trakky from https://Trakky.itch.io/Trakky.
